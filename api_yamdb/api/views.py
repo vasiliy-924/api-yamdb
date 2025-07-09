@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import generics
+from .serializers import TokenObtainSerializer
 
-# Create your views here.
+class TokenObtainView(generics.CreateAPIView):
+    serializer_class = TokenObtainSerializer
+    permission_classes = ()
+    authentication_classes = ()
