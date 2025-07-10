@@ -1,21 +1,121 @@
 
-from django.shortcuts import render
-from rest_framework import filters, viewsets, generics
 
-from api.permissions import IsAuthorOrReadOnly
+from rest_framework import filters, viewsets, generics
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+
+import jwt
+from django.conf import settings
+
+from api.permissions import IsAuthorOrReadOnly, IsAdmin
 from api.serializers import (
     CategoriesSerializer,
     GenreSerializer,
     TitleSerializer,
-    TokenObtainSerializer
+    TokenObtainSerializer,
+    SignupSerializer,
+    UserCreateSerializer
 )
 from content.models import Categories, Genre, Title
+from users.models import User
+from django.utils.crypto import get_random_string
+from users.utils import send_confirmation_email
 
 
 class TokenObtainView(generics.CreateAPIView):
     serializer_class = TokenObtainSerializer
     permission_classes = ()
     authentication_classes = ()
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        confirmation_code = request.data.get('confirmation_code')
+        if not username or not confirmation_code:
+            return Response(
+                {'detail': 'username и confirmation_code обязательны.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'Пользователь не найден.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        if str(user.confirmation_code) != str(confirmation_code):
+            return Response(
+                {'confirmation_code': ['Неверный confirmation_code.']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        import datetime
+        payload = {
+            'username': user.username,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
+        }
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        return Response({'token': token}, status=status.HTTP_200_OK)
+
+
+class SignupView(generics.CreateAPIView):
+    serializer_class = SignupSerializer
+    permission_classes = ()
+    authentication_classes = ()
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        username = serializer.validated_data['username']
+        confirmation_code = get_random_string(24)
+        try:
+            user = User.objects.get(username=username)
+            if user.email != email:
+                return Response(
+                    {'email': 'Email не совпадает с username.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.confirmation_code = confirmation_code
+            user.save()
+        except User.DoesNotExist:
+            user = User.objects.create(
+                username=username,
+                email=email,
+                confirmation_code=confirmation_code
+            )
+        send_confirmation_email(user.email, confirmation_code)
+        return Response(
+            {'email': user.email, 'username': user.username},
+            status=status.HTTP_200_OK
+        )
+    
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserCreateSerializer
+    permission_classes = [IsAdmin]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username']
+    lookup_field = 'username'
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    @action(detail=False, methods=['get', 'patch'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        user = request.user
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+        elif request.method == 'PATCH':
+            data = request.data.copy()
+            data.pop('role', None)
+            serializer = self.get_serializer(
+                user,
+                data=data,
+                partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
