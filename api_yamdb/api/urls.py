@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 # тут импортируй Вьюсеты
 # from api.views import ...
-from content.views import CategoriesViewSet, GenreViewSet, TitleViewSet
+from api.views import CategoriesViewSet, GenreViewSet, TitleViewSet
 
 
 api_v1_router = DefaultRouter()
