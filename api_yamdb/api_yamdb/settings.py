@@ -26,10 +26,10 @@ INSTALLED_APPS = [
     'drf_spectacular',
 
     # Приложения
-    'api.apps.ApiConfig',
     'content.apps.ContentConfig',
     'reviews.apps.ReviewsConfig',
     'users.apps.UsersConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -90,7 +90,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-Ru'
 
 TIME_ZONE = 'UTC'
 

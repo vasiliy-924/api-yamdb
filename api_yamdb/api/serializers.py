@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from users.models import User
-import re
 from content.models import Categories, Genre, Title
+from users.utils import validate_username_value
 
 
 USERNAME_REGEX = r'^[\w.@+-]+\Z'
@@ -34,15 +34,7 @@ class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True)
 
     def validate_username(self, value):
-        if not re.match(USERNAME_REGEX, value):
-            raise serializers.ValidationError(
-                'Недопустимые символы в username.'
-            )
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                'Username "me" запрещён.'
-            )
-        return value
+        return validate_username_value(value)
 
     def validate(self, data):
         username = data.get('username')
@@ -90,15 +82,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         }
 
     def validate_username(self, value):
-        if not re.match(USERNAME_REGEX, value):
-            raise serializers.ValidationError(
-                'Недопустимые символы в username.'
-            )
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                'Username "me" запрещён.'
-            )
-        return value
+        return validate_username_value(value)
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
