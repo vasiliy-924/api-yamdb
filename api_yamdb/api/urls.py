@@ -7,7 +7,6 @@ from api.views import CategoryViewSet, GenreViewSet, TitleViewSet
 from api.views import CommentViewSet, ReviewViewSet
 
 
-
 api_v1_router = DefaultRouter()
 # тут регистрируй эндпоинты
 api_v1_router.register(r'users', UserViewSet, basename='users')
