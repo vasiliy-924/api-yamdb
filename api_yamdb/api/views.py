@@ -11,6 +11,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 import jwt
 from django.conf import settings
 from api.filters import TitleFilter
+from api.mixin import ModelMixinSet
 from api.permissions import IsAuthorOrReadOnly, IsAdmin, IsAdminOrReadOnly
 from api.serializers import (
     CategorySerializer,
@@ -28,10 +29,6 @@ from api.serializers import CommentSerializer, ReviewSerializer
 from users.models import User
 from django.utils.crypto import get_random_string
 from users.utils import send_confirmation_email
-
-from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
-                                   ListModelMixin)
-from rest_framework.viewsets import GenericViewSet
 
 
 class TokenObtainView(generics.CreateAPIView):
@@ -128,8 +125,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
 
 
-class CategoryViewSet(CreateModelMixin, ListModelMixin,
-                      DestroyModelMixin, GenericViewSet):
+class CategoryViewSet(ModelMixinSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -138,8 +134,7 @@ class CategoryViewSet(CreateModelMixin, ListModelMixin,
     lookup_field = 'slug'
 
 
-class GenreViewSet(GenericViewSet, ListModelMixin,
-                   CreateModelMixin, DestroyModelMixin):
+class GenreViewSet(ModelMixinSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
