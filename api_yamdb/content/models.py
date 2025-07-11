@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class Categories(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=256, verbose_name='Категории')
     slug = models.SlugField(
         unique=True,
@@ -43,7 +43,7 @@ class Title(models.Model):
         help_text='Укажите дату выхода',
     )
     category = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.SET_NULL,
         null=True,
         related_name='titles',
@@ -54,6 +54,12 @@ class Title(models.Model):
         through='TitleGenre',
         related_name='titles',
         verbose_name='Жанр'
+    )
+    rating = models.IntegerField(
+        verbose_name='Рейтинг',
+        null=True,
+        blank=True,
+        default=None
     )
 
     class Meta():
