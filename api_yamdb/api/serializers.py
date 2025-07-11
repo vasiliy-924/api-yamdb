@@ -2,10 +2,11 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from users.models import User
 from content.models import Categories, Genre, Title
+from rest_framework.validators import UniqueTogetherValidator
+
+from reviews.models import Comment, Review
 from users.utils import validate_username_value
 
-
-USERNAME_REGEX = r'^[\w.@+-]+\Z'
 
 
 class TokenObtainSerializer(serializers.Serializer):
@@ -104,3 +105,40 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
+
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для отзывов."""
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+    score = serializers.IntegerField(min_value=1, max_value=10)
+
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        read_only_fields = ('id', 'author', 'pub_date')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('title', 'author'),
+                message='Вы уже оставили отзыв на это произведение'
+            )
+        ]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для комментариев."""
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'author', 'pub_date')
+        read_only_fields = ('id', 'author', 'pub_date')

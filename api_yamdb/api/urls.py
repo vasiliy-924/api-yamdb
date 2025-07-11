@@ -2,15 +2,29 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 # тут импортируй Вьюсеты
 # from api.views import ...
-from api.views import CategoriesViewSet, GenreViewSet, TitleViewSet, SignupView, TokenObtainView, UserViewSet
+from api.views import SignupView, TokenObtainView, UserViewSet
+from api.views import CategoriesViewSet, GenreViewSet, TitleViewSet
+from api.views import CommentViewSet, ReviewViewSet
+
 
 
 api_v1_router = DefaultRouter()
 # тут регистрируй эндпоинты
+api_v1_router.register(r'users', UserViewSet, basename='users')
 api_v1_router.register(r'categories', CategoriesViewSet, basename='categories')
 api_v1_router.register(r'genres', GenreViewSet, basename='genres')
 api_v1_router.register(r'titles', TitleViewSet, basename='titles')
-api_v1_router.register(r'users', UserViewSet, basename='users')
+api_v1_router.register(
+    r'titles/(?P<title_id>\d+)/reviews',
+    ReviewViewSet,
+    basename='reviews'
+)
+api_v1_router.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet,
+    basename='comments'
+)
+
 
 urlpatterns = [
     path('v1/auth/signup/', SignupView.as_view(), name='signup'),
