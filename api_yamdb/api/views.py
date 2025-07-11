@@ -13,14 +13,14 @@ from django.conf import settings
 
 from api.permissions import IsAuthorOrReadOnly, IsAdmin
 from api.serializers import (
-    CategoriesSerializer,
+    CategorySerializer,
     GenreSerializer,
     TitleSerializer,
     TokenObtainSerializer,
     SignupSerializer,
     UserCreateSerializer
 )
-from content.models import Categories, Genre, Title
+from content.models import Category, Genre, Title
 
 from reviews.models import Comment, Review
 from api.serializers import CommentSerializer, ReviewSerializer
@@ -122,9 +122,9 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
-    queryset = Categories.objects.all()
-    serializer_class = CategoriesSerializer
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
