@@ -7,9 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
-import jwt
-from django.conf import settings
 from api.filters import TitleFilter
 from api.mixin import ModelMixinSet
 from api.permissions import IsAuthorOrReadOnly, IsAdmin, IsAdminOrReadOnly
@@ -24,11 +23,12 @@ from api.serializers import (
 )
 from content.models import Category, Genre, Title
 
-from reviews.models import Comment, Review
+from reviews.models import Review
 from api.serializers import CommentSerializer, ReviewSerializer
 from users.models import User
 from django.utils.crypto import get_random_string
 from users.utils import send_confirmation_email
+from rest_framework_simplejwt.tokens import AccessToken
 
 
 class TokenObtainView(generics.CreateAPIView):
@@ -37,31 +37,20 @@ class TokenObtainView(generics.CreateAPIView):
     authentication_classes = ()
 
     def post(self, request, *args, **kwargs):
-        username = request.data.get('username')
-        confirmation_code = request.data.get('confirmation_code')
-        if not username or not confirmation_code:
-            return Response(
-                {'detail': 'username и confirmation_code обязательны.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer = self.get_serializer(data=request.data)
         try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            return Response(
-                {'detail': 'Пользователь не найден.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        if str(user.confirmation_code) != str(confirmation_code):
-            return Response(
-                {'confirmation_code': ['Неверный confirmation_code.']},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        import datetime
-        payload = {
-            'username': user.username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
-        }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+            serializer.is_valid(raise_exception=True)
+        except DRFValidationError as exc:
+            errors = exc.detail
+            if (
+                isinstance(errors, dict)
+                and 'username' in errors
+                and 'Пользователь не найден.' in errors['username']
+            ):
+                return Response(errors, status=status.HTTP_404_NOT_FOUND)
+            raise
+        user = serializer.validated_data['user']
+        token = str(AccessToken.for_user(user))
         return Response({'token': token}, status=status.HTTP_200_OK)
 
 
@@ -93,10 +82,15 @@ class SignupView(generics.CreateAPIView):
             )
         send_confirmation_email(user.email, confirmation_code)
         return Response(
-            {'email': user.email, 'username': user.username},
+            {
+                'email': user.email,
+                'username': user.username,
+                #'confirmation_code': confirmation_code
+            },
             status=status.HTTP_200_OK
         )
-    
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserCreateSerializer

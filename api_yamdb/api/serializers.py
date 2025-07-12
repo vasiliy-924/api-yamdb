@@ -2,30 +2,40 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from users.models import User
 from content.models import Category, Genre, Title
-from rest_framework.validators import UniqueTogetherValidator
-
-from reviews.models import Comment, Review
-from users.utils import validate_username_value
 import datetime as dt
 from django.core.exceptions import ValidationError
+from reviews.models import Comment, Review
+from users.utils import validate_username_value
 
 
 class TokenObtainSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
 
     def validate(self, data):
         username = data.get('username')
         confirmation_code = data.get('confirmation_code')
+        errors = {}
+        if not username:
+            errors['username'] = ['Обязательное поле.']
+        if not confirmation_code:
+            errors['confirmation_code'] = ['Обязательное поле.']
+        if errors:
+            raise serializers.ValidationError(errors)
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
+            # Для view обработается как 404
             raise serializers.ValidationError({
-                'username': 'Пользователь не найден.'
+                'username': [
+                    'Пользователь не найден.'
+                ]
             })
         if str(user.confirmation_code) != str(confirmation_code):
             raise serializers.ValidationError({
-                'confirmation_code': 'Неверный confirmation_code.'
+                'confirmation_code': [
+                    'Неверный confirmation_code.'
+                ]
             })
         data['user'] = user
         return data
@@ -36,19 +46,48 @@ class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True)
 
     def validate_username(self, value):
+        if not value:
+            raise serializers.ValidationError('Обязательное поле.')
+        if len(value) > 150:
+            raise serializers.ValidationError(
+                'Максимальная длина 150 символов.'
+            )
         return validate_username_value(value)
+
+    def validate_email(self, value):
+        if not value:
+            raise serializers.ValidationError('Обязательное поле.')
+        if len(value) > 254:
+            raise serializers.ValidationError(
+                'Максимальная длина 254 символа.'
+            )
+        return value
 
     def validate(self, data):
         username = data.get('username')
         email = data.get('email')
+        if username == 'me':
+            raise serializers.ValidationError({
+                'username': [
+                    'Использовать имя "me" запрещено.'
+                ]
+            })
         user = User.objects.filter(username=username).first()
         if user:
             if user.email != email:
-                raise serializers.ValidationError(
-                    {'email': 'Email не совпадает с username.'}
-                )
+                # username занят, email не совпадает
+                raise serializers.ValidationError({
+                    'email': [
+                        'Email уже занят другим пользователем.'
+                    ]
+                })
         elif User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({'email': 'Email уже занят.'})
+            # email занят, username свободен
+            raise serializers.ValidationError({
+                'email': [
+                    'Email уже занят.'
+                ]
+            })
         return data
 
 
