@@ -161,6 +161,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с отзывами."""
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorOrReadOnly,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_title(self):
         """Возвращает произведение по title_id из URL."""
@@ -179,6 +180,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с комментариями."""
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnly,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
         """Возвращает отзыв по review_id из URL."""

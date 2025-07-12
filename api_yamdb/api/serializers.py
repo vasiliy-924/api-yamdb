@@ -138,19 +138,23 @@ class ReviewSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
     score = serializers.IntegerField(min_value=1, max_value=10)
-    title = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
-        read_only_fields = ('id', 'author', 'pub_date', 'title')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=('title', 'author'),
-                message='Вы уже оставили отзыв на это произведение'
-            )
-        ]
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        read_only_fields = ('id', 'author', 'pub_date')
+
+    def validate(self, data):
+        request = self.context.get('request')
+        view = self.context.get('view')
+        title = view.get_title() if view else None
+        author = request.user if request else None
+        if self.instance is None and title and author:
+            if Review._default_manager.filter(title=title, author=author).exists():
+                raise serializers.ValidationError(
+                    'Вы уже оставили отзыв на это произведение'
+                )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -160,12 +164,8 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only=True,
         default=serializers.CurrentUserDefault()
     )
-    title = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ('id', 'text', 'author', 'pub_date', 'title')
-        read_only_fields = ('id', 'author', 'pub_date', 'title')
-
-    def get_title(self, obj):
-        return obj.review.title.id if obj.review and obj.review.title else None
+        fields = ('id', 'text', 'author', 'pub_date')
+        read_only_fields = ('id', 'author', 'pub_date')
