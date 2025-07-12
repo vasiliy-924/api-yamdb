@@ -138,11 +138,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
     score = serializers.IntegerField(min_value=1, max_value=10)
+    title = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
-        read_only_fields = ('id', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
+        read_only_fields = ('id', 'author', 'pub_date', 'title')
         validators = [
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
@@ -159,8 +160,12 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only=True,
         default=serializers.CurrentUserDefault()
     )
+    title = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ('id', 'text', 'author', 'pub_date')
-        read_only_fields = ('id', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'pub_date', 'title')
+        read_only_fields = ('id', 'author', 'pub_date', 'title')
+
+    def get_title(self, obj):
+        return obj.review.title.id if obj.review and obj.review.title else None
