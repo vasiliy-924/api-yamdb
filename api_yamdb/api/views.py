@@ -1,13 +1,16 @@
 
 
+from django.shortcuts import get_object_or_404
+from django.utils.crypto import get_random_string
+
 from rest_framework import filters, viewsets, generics
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import ValidationError as DRFValidationError
+from rest_framework_simplejwt.tokens import AccessToken
+from django_filters.rest_framework import DjangoFilterBackend
 
 from api.filters import TitleFilter
 from api.mixin import ModelMixinSet
@@ -19,16 +22,14 @@ from api.serializers import (
     TitleReadOnlySerializer,
     TokenObtainSerializer,
     SignupSerializer,
-    UserCreateSerializer
+    UserCreateSerializer,
+    CommentSerializer,
+    ReviewSerializer
 )
-from content.models import Category, Genre, Title
-
-from reviews.models import Review
-from api.serializers import CommentSerializer, ReviewSerializer
 from users.models import User
-from django.utils.crypto import get_random_string
 from users.utils import send_confirmation_email
-from rest_framework_simplejwt.tokens import AccessToken
+from content.models import Category, Genre, Title
+from reviews.models import Review
 
 
 class TokenObtainView(generics.CreateAPIView):
@@ -85,7 +86,7 @@ class SignupView(generics.CreateAPIView):
             {
                 'email': user.email,
                 'username': user.username,
-                #'confirmation_code': confirmation_code,
+                'confirmation_code': user.confirmation_code,
             },
             status=status.HTTP_200_OK
         )
@@ -100,7 +101,8 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     http_method_names = ('get', 'post', 'patch', 'delete')
 
-    @action(detail=False, methods=['get', 'patch'], permission_classes=(IsAuthenticated,))
+    @action(detail=False, methods=['get', 'patch'],
+            permission_classes=(IsAuthenticated,))
     def me(self, request):
         user = request.user
         if request.method == 'GET':

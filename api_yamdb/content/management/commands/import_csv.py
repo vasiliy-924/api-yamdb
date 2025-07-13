@@ -9,6 +9,7 @@ from users.models import User
 
 CSV_DIR = os.path.join(settings.BASE_DIR, 'static', 'data')
 
+
 class Command(BaseCommand):
     help = 'Импортирует данные из csv-файлов в static/data/ в базу данных'
 

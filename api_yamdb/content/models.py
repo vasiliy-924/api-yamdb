@@ -70,7 +70,6 @@ class Title(models.Model):
         return self.name[:20]
 
 
-# Промежуточная модель:
 class TitleGenre(models.Model):
     title = models.ForeignKey(
         Title,

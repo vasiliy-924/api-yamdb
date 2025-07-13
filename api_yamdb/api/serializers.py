@@ -1,10 +1,12 @@
+import datetime as dt
+
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from users.models import User
+
 from content.models import Category, Genre, Title
-import datetime as dt
-from django.core.exceptions import ValidationError
 from reviews.models import Comment, Review
+from users.models import User
 from users.utils import validate_username_value
 
 
@@ -25,7 +27,6 @@ class TokenObtainSerializer(serializers.Serializer):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            # Для view обработается как 404
             raise serializers.ValidationError({
                 'username': [
                     'Пользователь не найден.'
@@ -189,7 +190,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         title = view.get_title() if view else None
         author = request.user if request else None
         if self.instance is None and title and author:
-            if Review._default_manager.filter(title=title, author=author).exists():
+            if Review._default_manager.filter(
+                title=title,
+                author=author
+            ).exists():
                 raise serializers.ValidationError(
                     'Вы уже оставили отзыв на это произведение'
                 )

@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from content.models import Title
+from content.models import Title  # noqa: F401
 
 
 class Review(models.Model):
