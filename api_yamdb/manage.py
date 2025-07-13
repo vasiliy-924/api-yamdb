@@ -4,6 +4,7 @@ import sys
 
 
 def main():
+    """Точка входа для управления Django-проектом через командную строку."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api_yamdb.settings')
     try:
         from django.core.management import execute_from_command_line

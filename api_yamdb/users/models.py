@@ -3,8 +3,11 @@ from django.db import models
 
 
 class User(AbstractUser):
+    """Модель пользователя с ролями и дополнительными полями."""
 
     class Roles(models.TextChoices):
+        """Роли пользователя."""
+
         USER = 'user', 'Пользователь'
         MODERATOR = 'moderator', 'Модератор'
         ADMIN = 'admin', 'Администратор'
@@ -57,11 +60,14 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
+        """Проверяет, является ли пользователь администратором."""
         return self.role == self.Roles.ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
+        """Проверяет, является ли пользователь модератором."""
         return self.role == self.Roles.MODERATOR
 
     def __str__(self):
-        return self.username
+        """Строковое представление пользователя."""
+        return self.username[:20]

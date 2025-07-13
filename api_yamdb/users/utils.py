@@ -8,6 +8,7 @@ USERNAME_REGEX = r'^[\w.@+-]+\Z'
 
 
 def validate_username_value(value):
+    """Проверяет корректность username по шаблону и запрещает 'me'."""
     if not re.match(USERNAME_REGEX, value):
         raise serializers.ValidationError(
             'Недопустимые символы в username.'
@@ -20,6 +21,7 @@ def validate_username_value(value):
 
 
 def send_confirmation_email(email, confirmation_code):
+    """Отправляет email с кодом подтверждения пользователю."""
     subject = 'Ваш код подтверждения для YaMDb'
     message = (
         f'Спасибо за регистрацию! Ваш код подтверждения: {confirmation_code}'

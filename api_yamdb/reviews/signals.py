@@ -7,7 +7,7 @@ from reviews.models import Review
 
 @receiver([post_save, post_delete], sender=Review)
 def update_rating(sender, instance, **kwargs):
-    """Обновляет рейтинг произведения по оценкам отзывов."""
+    """Обновляет рейтинг произведения на основе оценок отзывов."""
     title = instance.title
     avg_score = title.reviews.aggregate(Avg('score'))['score__avg']
     title.rating = round(avg_score) if avg_score else None

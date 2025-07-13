@@ -1,9 +1,8 @@
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 
-from rest_framework import filters, viewsets, generics
+from rest_framework import filters, viewsets, generics, status
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -17,25 +16,27 @@ from api.serializers import (
     CategorySerializer,
     GenreSerializer,
     TitleSerializer,
-    TitleReadOnlySerializer,
     TokenObtainSerializer,
     SignupSerializer,
     UserCreateSerializer,
     CommentSerializer,
     ReviewSerializer
 )
+from content.models import Category, Genre, Title
 from users.models import User
 from users.utils import send_confirmation_email
-from content.models import Category, Genre, Title
 from reviews.models import Review
 
 
 class TokenObtainView(generics.CreateAPIView):
+    """Вью для получения JWT-токена по username и confirmation_code."""
+
     serializer_class = TokenObtainSerializer
     permission_classes = ()
     authentication_classes = ()
 
     def post(self, request, *args, **kwargs):
+        """Обрабатывает POST-запрос для получения токена."""
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
@@ -54,11 +55,14 @@ class TokenObtainView(generics.CreateAPIView):
 
 
 class SignupView(generics.CreateAPIView):
+    """Вью для регистрации пользователя и отправки confirmation_code."""
+
     serializer_class = SignupSerializer
     permission_classes = ()
     authentication_classes = ()
 
     def post(self, request, *args, **kwargs):
+        """Обрабатывает POST-запрос для регистрации пользователя."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
@@ -90,6 +94,8 @@ class SignupView(generics.CreateAPIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для управления пользователями."""
+
     queryset = User.objects.all()
     serializer_class = UserCreateSerializer
     permission_classes = (IsAdmin,)
@@ -98,9 +104,10 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     http_method_names = ('get', 'post', 'patch', 'delete')
 
-    @action(detail=False, methods=['get', 'patch'],
+    @action(detail=False, methods=('get', 'patch'),
             permission_classes=(IsAuthenticated,))
     def me(self, request):
+        """Возвращает или обновляет данные текущего пользователя."""
         user = request.user
         if request.method == 'GET':
             serializer = self.get_serializer(user)
@@ -119,6 +126,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class CategoryViewSet(ModelMixinSet):
+    """Вьюсет для категорий произведений."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -128,6 +137,8 @@ class CategoryViewSet(ModelMixinSet):
 
 
 class GenreViewSet(ModelMixinSet):
+    """Вьюсет для жанров произведений."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -137,6 +148,8 @@ class GenreViewSet(ModelMixinSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для произведений."""
+
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -144,17 +157,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_class = TitleFilter
     http_method_names = ('get', 'post', 'patch', 'delete')
 
-    def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
-            return TitleReadOnlySerializer
-        return TitleSerializer
-
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с отзывами."""
+
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorOrReadOnly,)
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_title(self):
         """Возвращает произведение по title_id из URL."""
@@ -171,9 +180,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с комментариями."""
+
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnly,)
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):
         """Возвращает отзыв по review_id из URL."""

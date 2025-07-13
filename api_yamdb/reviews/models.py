@@ -45,6 +45,7 @@ class Review(models.Model):
         ]
 
     def __str__(self):
+        """Строковое представление отзыва."""
         return f'Отзыв {self.id} от {self.author} на {self.title}'
 
 
@@ -76,4 +77,5 @@ class Comment(models.Model):
         ordering = ['-pub_date']
 
     def __str__(self):
+        """Строковое представление комментария."""
         return f'Комментарий {self.id} от {self.author} к отзыву {self.review}'

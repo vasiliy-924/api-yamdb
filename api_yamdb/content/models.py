@@ -2,6 +2,8 @@ from django.db import models
 
 
 class Category(models.Model):
+    """Модель категории произведения."""
+
     name = models.CharField(max_length=256, verbose_name='Категории')
     slug = models.SlugField(
         unique=True,
@@ -15,10 +17,13 @@ class Category(models.Model):
         verbose_name_plural = 'Категории'
 
     def __str__(self):
+        """Строковое представление категории."""
         return self.name[:20]
 
 
 class Genre(models.Model):
+    """Модель жанра произведения."""
+
     name = models.CharField(max_length=256, verbose_name='Жанры')
     slug = models.SlugField(
         unique=True,
@@ -32,10 +37,13 @@ class Genre(models.Model):
         verbose_name_plural = 'Жанры'
 
     def __str__(self):
+        """Строковое представление жанра."""
         return self.name[:20]
 
 
 class Title(models.Model):
+    """Модель произведения."""
+
     name = models.CharField(max_length=256, verbose_name='Название')
     description = models.TextField(verbose_name='Описание')
     year = models.IntegerField(
@@ -67,10 +75,13 @@ class Title(models.Model):
         verbose_name_plural = 'Названия'
 
     def __str__(self):
+        """Строковое представление произведения."""
         return self.name[:20]
 
 
 class TitleGenre(models.Model):
+    """Промежуточная модель для связи произведения и жанра."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.SET_NULL,
@@ -83,4 +94,5 @@ class TitleGenre(models.Model):
         verbose_name='Жанр')
 
     def __str__(self):
+        """Строковое представление связи произведения и жанра."""
         return f'{self.title}{self.genre}'

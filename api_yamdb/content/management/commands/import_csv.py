@@ -11,9 +11,11 @@ CSV_DIR = os.path.join(settings.BASE_DIR, 'static', 'data')
 
 
 class Command(BaseCommand):
+    """Команда для импорта данных из csv-файлов в базу данных."""
     help = 'Импортирует данные из csv-файлов в static/data/ в базу данных'
 
     def handle(self, *args, **options):
+        """Запускает импорт всех сущностей из csv-файлов."""
         try:
             self.import_users()
             self.import_categories()
@@ -28,6 +30,7 @@ class Command(BaseCommand):
             raise CommandError(f'Ошибка при импорте: {e}')
 
     def import_users(self):
+        """Импортирует пользователей из users.csv."""
         path = os.path.join(CSV_DIR, 'users.csv')
         with open(path, encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -47,6 +50,7 @@ class Command(BaseCommand):
                         f'Ошибка в users.csv, строка {row}: {e}')
 
     def import_categories(self):
+        """Импортирует категории из category.csv."""
         path = os.path.join(CSV_DIR, 'category.csv')
         with open(path, encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -62,6 +66,7 @@ class Command(BaseCommand):
                         f'Ошибка в category.csv, строка {row}: {e}')
 
     def import_genres(self):
+        """Импортирует жанры из genre.csv."""
         path = os.path.join(CSV_DIR, 'genre.csv')
         with open(path, encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -77,6 +82,7 @@ class Command(BaseCommand):
                         f'Ошибка в genre.csv, строка {row}: {e}')
 
     def import_titles(self):
+        """Импортирует произведения из titles.csv."""
         path = os.path.join(CSV_DIR, 'titles.csv')
         with open(path, encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -96,6 +102,7 @@ class Command(BaseCommand):
                         f'Ошибка в titles.csv, строка {row}: {e}')
 
     def import_genre_title(self):
+        """Импортирует связи жанров и произведений из genre_title.csv."""
         path = os.path.join(CSV_DIR, 'genre_title.csv')
         with open(path, encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -109,6 +116,7 @@ class Command(BaseCommand):
                         f'Ошибка в genre_title.csv, строка {row}: {e}')
 
     def import_reviews(self):
+        """Импортирует отзывы из review.csv."""
         path = os.path.join(CSV_DIR, 'review.csv')
         with open(path, encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -129,6 +137,7 @@ class Command(BaseCommand):
                         f'Ошибка в review.csv, строка {row}: {e}')
 
     def import_comments(self):
+        """Импортирует комментарии из comments.csv."""
         path = os.path.join(CSV_DIR, 'comments.csv')
         with open(path, encoding='utf-8') as f:
             reader = csv.DictReader(f)
