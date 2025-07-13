@@ -1,5 +1,3 @@
-
-
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 
@@ -86,7 +84,6 @@ class SignupView(generics.CreateAPIView):
             {
                 'email': user.email,
                 'username': user.username,
-                'confirmation_code': user.confirmation_code,
             },
             status=status.HTTP_200_OK
         )
