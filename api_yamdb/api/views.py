@@ -85,7 +85,7 @@ class SignupView(generics.CreateAPIView):
             {
                 'email': user.email,
                 'username': user.username,
-                #'confirmation_code': confirmation_code
+                #'confirmation_code': confirmation_code,
             },
             status=status.HTTP_200_OK
         )
