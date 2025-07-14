@@ -83,7 +83,8 @@ class SignupSerializer(serializers.Serializer):
             })
         user_by_username = User.objects.filter(username=username).first()
         user_by_email = User.objects.filter(email=email).first()
-        if user_by_username and user_by_email and user_by_username != user_by_email:
+        if user_by_username and user_by_email \
+                and user_by_username != user_by_email:
             raise serializers.ValidationError({
                 'email': [
                     'Email уже занят другим пользователем.'

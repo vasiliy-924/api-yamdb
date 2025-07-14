@@ -24,4 +24,4 @@ class TitleAdmin(admin.ModelAdmin):
 @admin.register(TitleGenre)
 class TitleGenreAdmin(admin.ModelAdmin):
     list_display = ('title', 'genre')
-    search_fields = ('title__name', 'genre__name') 
+    search_fields = ('title__name', 'genre__name')

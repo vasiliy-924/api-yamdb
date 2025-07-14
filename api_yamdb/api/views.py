@@ -186,7 +186,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):
-        """Возвращает отзыв по review_id из URL, проверяя принадлежность title."""
+        """Возвращает отзыв по review_id, проверяя title."""
         review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
         title_id = self.kwargs.get('title_id')
         if str(review.title.id) != str(title_id):
@@ -203,7 +203,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=self.get_review())
 
     def get_object(self):
-        """Переопределяет получение объекта комментария с проверкой title и review."""
+        """Получает комментарий с проверкой title и review."""
         comment = super().get_object()
         review = comment.review
         title_id = self.kwargs.get('title_id')
