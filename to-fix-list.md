@@ -1,6 +1,6 @@
 # Список не прошедших тестов Postman
 
-## 1. username_and_email_both_in_use_by_different_users
+## 1. username_and_email_both_in_use_by_different_users ✅
 **Endpoint:** `POST /api/v1/auth/signup/`  
 **Ожидалось:**  
 - Статус-код: 400  
@@ -17,7 +17,7 @@
 
 ---
 
-## 2. username_in_use
+## 2. username_in_use ✅
 **Endpoint:** `POST /api/v1/auth/signup/`  
 **Ожидалось:**  
 - Статус-код: 400  
@@ -33,7 +33,7 @@
 
 ---
 
-## 3. create_title_only_required_fields // Admin
+## 3. create_title_only_required_fields // Admin ✅
 **Endpoint:** `POST /api/v1/titles/`  
 **Ожидалось:**  
 - Статус-код: 201  
@@ -44,7 +44,7 @@
 
 ---
 
-## 4. create_title_with_empty_genre // Admin
+## 4. create_title_with_empty_genre // Admin ✅
 **Endpoint:** `POST /api/v1/titles/`  
 **Ожидалось:**  
 - Статус-код: 400  
@@ -54,7 +54,7 @@
 
 ---
 
-## 5. create_comment_with_wrong_ids_in_url // User
+## 5. create_comment_with_wrong_ids_in_url // User 
 **Endpoint:** `POST /api/v1/titles/1/reviews/4/comments/`  
 **Ожидалось:**  
 - Статус-код: 404  
@@ -64,7 +64,7 @@
 
 ---
 
-## 6. get_comment_with_wrong_title_id // No Auth
+## 6. get_comment_with_wrong_title_id // No Auth ❌
 **Endpoint:** `GET /api/v1/titles/1/reviews/3/comments/4/`  
 **Ожидалось:**  
 - Статус-код: 404  
@@ -74,7 +74,7 @@
 
 ---
 
-## 7. update_comment_with_wrong_title_id // Admin
+## 7. update_comment_with_wrong_title_id // Admin ❌
 **Endpoint:** `PATCH /api/v1/titles/1/reviews/3/comments/4/`  
 **Ожидалось:**  
 - Статус-код: 404  
@@ -84,7 +84,7 @@
 
 ---
 
-## 8. delete_comment_with_wrong_title_id // Admin
+## 8. delete_comment_with_wrong_title_id // Admin ❌
 **Endpoint:** `DELETE /api/v1/titles/1/reviews/3/comments/4/`  
 **Ожидалось:**  
 - Статус-код: 404  
@@ -94,7 +94,7 @@
 
 ---
 
-## 9. delete_comment // Moderator
+## 9. delete_comment // Moderator ❌
 **Endpoint:** `DELETE /api/v1/titles/2/reviews/1/comments/4/`  
 **Ожидалось:**  
 - Статус-код: 204  
@@ -104,7 +104,7 @@
 
 ---
 
-## 10. delete_short_title // Admin
+## 10. delete_short_title // Admin ❌
 **Endpoint:** `DELETE /api/v1/titles/{{adminShortTitle}}/`  
 **Ожидалось:**  
 - Статус-код: 204  

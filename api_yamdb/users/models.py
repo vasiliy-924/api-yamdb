@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 
 
 class User(AbstractUser):
@@ -18,8 +20,14 @@ class User(AbstractUser):
         unique=True,
         help_text=(
             'Обязательно. Не более 150 символов. '
-            'Только буквы, цифры и @/./+/-/_.'
+            'Только буквы, цифры и @/./+/-/_. '
         ),
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Имя пользователя может содержать только буквы, цифры и символы: @/./+/-/_'
+            )
+        ]
     )
     email = models.EmailField(
         verbose_name='email адрес',
@@ -57,6 +65,13 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
+
+    def clean(self):
+        super().clean()
+        if str(self.username).lower() == 'me':
+            raise ValidationError({
+                'username': 'Имя пользователя "me" запрещено.'
+            })
 
     @property
     def is_admin(self):

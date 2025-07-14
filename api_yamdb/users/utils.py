@@ -11,7 +11,7 @@ def validate_username_value(value):
     """Проверяет корректность username по шаблону и запрещает 'me'."""
     if not re.match(USERNAME_REGEX, value):
         raise serializers.ValidationError(
-            'Недопустимые символы в username.'
+            'Имя пользователя может содержать только буквы, цифры и символы: @/./+/-/_'
         )
     if value.lower() == 'me':
         raise serializers.ValidationError(

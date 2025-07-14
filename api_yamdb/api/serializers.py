@@ -81,15 +81,25 @@ class SignupSerializer(serializers.Serializer):
                     'Использовать имя "me" запрещено.'
                 ]
             })
-        user = User.objects.filter(username=username).first()
-        if user:
-            if user.email != email:
+        user_by_username = User.objects.filter(username=username).first()
+        user_by_email = User.objects.filter(email=email).first()
+        if user_by_username and user_by_email and user_by_username != user_by_email:
+            raise serializers.ValidationError({
+                'email': [
+                    'Email уже занят другим пользователем.'
+                ],
+                'username': [
+                    'Username уже занят другим пользователем.'
+                ]
+            })
+        if user_by_username:
+            if user_by_username.email != email:
                 raise serializers.ValidationError({
-                    'email': [
-                        'Email уже занят другим пользователем.'
+                    'username': [
+                        'Username уже занят.'
                     ]
                 })
-        elif User.objects.filter(email=email).exists():
+        elif user_by_email:
             raise serializers.ValidationError({
                 'email': [
                     'Email уже занят.'
@@ -170,6 +180,11 @@ class TitleSerializer(serializers.ModelSerializer):
         many=True,
         required=True
     )
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True
+    )
     category_detail = CategorySerializer(source='category', read_only=True)
     genre_detail = GenreSerializer(source='genre', many=True, read_only=True)
 
@@ -194,6 +209,13 @@ class TitleSerializer(serializers.ModelSerializer):
         year = dt.date.today().year
         if value > year:
             raise ValidationError('Год выпуска не может быть больше текущего.')
+        return value
+
+    def validate_genre(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                'Список жанров не может быть пустым.'
+            )
         return value
 
 
