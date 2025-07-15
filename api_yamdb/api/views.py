@@ -1,13 +1,12 @@
-from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
-
-from rest_framework import filters, viewsets, generics, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from django_filters.rest_framework import DjangoFilterBackend
 
 from api.filters import TitleFilter
 from api.mixin import ModelMixinSet
@@ -23,9 +22,9 @@ from api.serializers import (
     ReviewSerializer
 )
 from content.models import Category, Genre, Title
+from reviews.models import Review
 from users.models import User
 from users.utils import send_confirmation_email
-from reviews.models import Review
 
 
 class TokenObtainView(generics.CreateAPIView):
@@ -186,8 +185,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):
-        """Возвращает отзыв по review_id из URL."""
-        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        """Возвращает отзыв по review_id, проверяя title."""
+        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        title_id = self.kwargs.get('title_id')
+        if str(review.title.id) != str(title_id):
+            from rest_framework.exceptions import NotFound
+            raise NotFound('Отзыв не найден для данного произведения.')
+        return review
 
     def get_queryset(self):
         """Возвращает комментарии к указанному отзыву."""
@@ -196,3 +200,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Сохраняет комментарий с указанием автора и отзыва."""
         serializer.save(author=self.request.user, review=self.get_review())
+
+    def get_object(self):
+        """Получает комментарий с проверкой title и review."""
+        comment = super().get_object()
+        review = comment.review
+        title_id = self.kwargs.get('title_id')
+        if str(review.title.id) != str(title_id):
+            from rest_framework.exceptions import NotFound
+            raise NotFound('Комментарий не найден для данного произведения.')
+        return comment
