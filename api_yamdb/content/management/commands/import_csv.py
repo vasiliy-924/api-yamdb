@@ -1,7 +1,7 @@
-from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
 import csv
 import os
+from django.core.management.base import BaseCommand, CommandError
+from django.conf import settings
 from content.models import Category, Genre, Title
 from reviews.models import Review, Comment
 from users.models import User

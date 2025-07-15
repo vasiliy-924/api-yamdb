@@ -1,5 +1,7 @@
+import datetime as dt
 from django.contrib import admin
-from .models import Category, Genre, Title, TitleGenre
+from django.core.exceptions import ValidationError
+from content.models import Category, Genre, Title, TitleGenre
 
 
 @admin.register(Category)
@@ -16,9 +18,20 @@ class GenreAdmin(admin.ModelAdmin):
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'year', 'category', 'rating')
+    list_display = ('name', 'year', 'category')
     search_fields = ('name', 'year')
     list_filter = ('year', 'category')
+
+    def genres_list(self, obj):
+        return ', '.join([genre.name for genre in obj.genre.all()])
+    genres_list.short_description = 'Жанры'
+
+    def save_model(self, request, obj, form, change):
+        if obj.year > dt.date.today().year:
+            raise ValidationError(
+                'Год выпуска не может быть больше текущего года.'
+            )
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(TitleGenre)
