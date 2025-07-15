@@ -71,10 +71,16 @@ class User(AbstractUser):
 
     def clean(self):
         super().clean()
+        # Проверка на 'me' теперь в save, здесь больше не нужна
+
+    def save(self, *args, **kwargs):
         if str(self.username).lower() == 'me':
             raise ValidationError({
-                'username': 'Имя пользователя "me" запрещено.'
+                'username': (
+                    'Имя пользователя "me" запрещено.'
+                )
             })
+        super().save(*args, **kwargs)
 
     @property
     def is_admin(self):
