@@ -69,7 +69,6 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
-
     def save(self, *args, **kwargs):
         if str(self.username).lower() == 'me':
             raise ValidationError({

@@ -51,7 +51,7 @@ class UserAdmin(BaseUserAdmin):
                 'comments_count',
                 'reviews_count',
                 'confirmation_code'
-                )
+            )
             }
         ),
         (
@@ -63,7 +63,7 @@ class UserAdmin(BaseUserAdmin):
                 'is_superuser',
                 'groups',
                 'user_permissions'
-                )
+            )
             }
         ),
         (
@@ -71,7 +71,7 @@ class UserAdmin(BaseUserAdmin):
             {'fields': (
                 'last_login',
                 'date_joined'
-                )
+            )
             }
         ),
     )
