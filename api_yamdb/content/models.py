@@ -63,16 +63,10 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Жанр'
     )
-    rating = models.IntegerField(
-        verbose_name='Рейтинг',
-        null=True,
-        blank=True,
-        default=None
-    )
 
     class Meta():
-        verbose_name = 'Название'
-        verbose_name_plural = 'Названия'
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
 
     def __str__(self):
         """Строковое представление произведения."""
