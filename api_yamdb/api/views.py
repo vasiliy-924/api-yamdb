@@ -1,13 +1,12 @@
-from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
-
-from rest_framework import filters, viewsets, generics, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from django_filters.rest_framework import DjangoFilterBackend
 
 from api.filters import TitleFilter
 from api.mixin import ModelMixinSet
@@ -23,9 +22,9 @@ from api.serializers import (
     ReviewSerializer
 )
 from content.models import Category, Genre, Title
+from reviews.models import Review
 from users.models import User
 from users.utils import send_confirmation_email
-from reviews.models import Review
 
 
 class TokenObtainView(generics.CreateAPIView):

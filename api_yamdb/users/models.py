@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+from django.db import models
 
 
 class User(AbstractUser):
@@ -69,12 +69,14 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
-    def clean(self):
-        super().clean()
+    def save(self, *args, **kwargs):
         if str(self.username).lower() == 'me':
             raise ValidationError({
-                'username': 'Имя пользователя "me" запрещено.'
+                'username': (
+                    'Имя пользователя "me" запрещено.'
+                )
             })
+        super().save(*args, **kwargs)
 
     @property
     def is_admin(self):
