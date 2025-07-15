@@ -169,7 +169,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(read_only=True, allow_null=True)
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
@@ -203,6 +203,8 @@ class TitleSerializer(serializers.ModelSerializer):
         rep['category'] = category_detail
         genre_detail = rep.pop('genre_detail')
         rep['genre'] = genre_detail
+        if rep['rating'] is not None:
+            rep['rating'] = int(round(rep['rating']))
         return rep
 
     def validate_year(self, value):
