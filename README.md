@@ -16,9 +16,9 @@
 - Django REST Framework
 - Simple JWT
 - django-filter
-- SQLite/PostgreSQL (на выбор)
-- Pytest, pytest-django (тестирование)
-- flake8 (линтинг)
+- SQLite
+- Pytest
+- flake8
 
 ## Алгоритм регистрации пользователей
 
