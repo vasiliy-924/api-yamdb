@@ -69,9 +69,6 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
-    def clean(self):
-        super().clean()
-        # Проверка на 'me' теперь в save, здесь больше не нужна
 
     def save(self, *args, **kwargs):
         if str(self.username).lower() == 'me':
