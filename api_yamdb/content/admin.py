@@ -1,9 +1,7 @@
 import datetime as dt
 from django.contrib import admin
 from django.core.exceptions import ValidationError
-
 from .models import Category, Genre, Title, TitleGenre
-
 
 
 @admin.register(Category)
@@ -33,7 +31,6 @@ class TitleAdmin(admin.ModelAdmin):
             raise ValidationError("Год выпуска не может быть больше текущего года.")
         super().save_model(request, obj, form, change)
 
-    
 
 @admin.register(TitleGenre)
 class TitleGenreAdmin(admin.ModelAdmin):
