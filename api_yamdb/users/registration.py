@@ -9,10 +9,10 @@ USERNAME_REGEX = r'^[\w.@+-]+\Z'
 
 def validate_username_value(value):
     """Проверяет корректность username по шаблону и запрещает 'me'."""
-    if not re.match(USERNAME_REGEX, value):
+    forbidden = re.sub(r'[\w.@+-]', '', value)
+    if forbidden:
         raise serializers.ValidationError(
-            'Имя пользователя может содержать только буквы, '
-            'цифры и символы: @/./+/-/_'
+            f'Имя пользователя содержит запрещённые символы: {set(forbidden)}'
         )
     if value.lower() == 'me':
         raise serializers.ValidationError(

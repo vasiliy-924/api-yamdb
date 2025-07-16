@@ -7,7 +7,7 @@ from rest_framework.validators import UniqueValidator
 from content.models import Category, Genre, Title
 from reviews.models import Comment, Review
 from users.models import User
-from users.utils import validate_username_value
+from users.mixins import UsernameValidationMixin
 
 
 class TokenObtainSerializer(serializers.Serializer):
@@ -45,21 +45,14 @@ class TokenObtainSerializer(serializers.Serializer):
         return data
 
 
-class SignupSerializer(serializers.Serializer):
+class SignupSerializer(serializers.Serializer, UsernameValidationMixin):
     """Сериализатор для регистрации пользователя."""
 
     email = serializers.EmailField(max_length=254, required=True)
     username = serializers.CharField(max_length=150, required=True)
 
     def validate_username(self, value):
-        """Проверяет корректность username."""
-        if not value:
-            raise serializers.ValidationError('Обязательное поле.')
-        if len(value) > 150:
-            raise serializers.ValidationError(
-                'Максимальная длина 150 символов.'
-            )
-        return validate_username_value(value)
+        return UsernameValidationMixin.validate_username(self, value)
 
     def validate_email(self, value):
         """Проверяет корректность email."""
@@ -109,7 +102,7 @@ class SignupSerializer(serializers.Serializer):
         return data
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(serializers.ModelSerializer, UsernameValidationMixin):
     """Сериализатор для создания пользователя."""
 
     username = serializers.CharField(
@@ -144,8 +137,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         }
 
     def validate_username(self, value):
-        """Проверяет корректность username при создании пользователя."""
-        return validate_username_value(value)
+        return UsernameValidationMixin.validate_username(self, value)
 
 
 class CategorySerializer(serializers.ModelSerializer):
