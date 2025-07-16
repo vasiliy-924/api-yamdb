@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from api.filters import TitleFilter
-from api.mixin import ModelMixinSet
 from api.permissions import IsAuthorOrReadOnly, IsAdmin, IsAdminOrReadOnly
 from api.serializers import (
     CategorySerializer,
@@ -125,7 +124,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
 
 
-class CategoryViewSet(ModelMixinSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     """Вьюсет для категорий произведений."""
 
     queryset = Category.objects.all()
@@ -134,9 +133,10 @@ class CategoryViewSet(ModelMixinSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    http_method_names = ('get', 'post', 'delete')
 
 
-class GenreViewSet(ModelMixinSet):
+class GenreViewSet(viewsets.ModelViewSet):
     """Вьюсет для жанров произведений."""
 
     queryset = Genre.objects.all()
@@ -145,6 +145,7 @@ class GenreViewSet(ModelMixinSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    http_method_names = ('get', 'post', 'delete')
 
 
 class TitleViewSet(viewsets.ModelViewSet):
