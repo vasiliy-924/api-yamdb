@@ -25,7 +25,7 @@ from api.serializers import (
 from content.models import Category, Genre, Title
 from reviews.models import Review
 from users.models import User
-from users.utils import send_confirmation_email
+from users.services import send_confirmation_email
 
 
 class TokenObtainView(generics.CreateAPIView):

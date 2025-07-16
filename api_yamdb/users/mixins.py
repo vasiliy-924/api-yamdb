@@ -1,4 +1,4 @@
-from users.registration import validate_username_value
+from users.services import validate_username_value
 
 class UsernameValidationMixin:
     def validate_username(self, username):
