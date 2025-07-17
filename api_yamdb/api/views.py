@@ -8,7 +8,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from api.filters import TitleFilter
-from api.mixin import ModelMixinSet
 from api.permissions import IsAuthorOrReadOnly, IsAdmin, IsAdminOrReadOnly
 from api.serializers import (
     CategorySerializer,
@@ -110,32 +109,34 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
 
 
-class CategoryViewSet(ModelMixinSet):
+class BaseViewSet(viewsets.ModelViewSet):
+    """Базовый вьюсет для категорий и жанров."""
+
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+    http_method_names = ('get', 'post', 'delete')
+
+
+class CategoryViewSet(BaseViewSet):
     """Вьюсет для категорий произведений."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
-class GenreViewSet(ModelMixinSet):
+class GenreViewSet(BaseViewSet):
     """Вьюсет для жанров произведений."""
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
 
-    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).order_by('-rating')
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)

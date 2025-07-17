@@ -149,10 +149,21 @@ class GenreSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор для произведений."""
+class TitleSerializerRead(serializers.ModelSerializer):
+    """Сериализатор для чтения произведений."""
 
     rating = serializers.IntegerField(read_only=True, allow_null=True)
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'rating', 'category', 'genre')
+ 
+
+class TitleSerializerWrite(serializers.ModelSerializer):
+    """Сериализатор для записи произведений."""
+
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
@@ -164,45 +175,19 @@ class TitleSerializer(serializers.ModelSerializer):
         many=True,
         required=True
     )
-    description = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        allow_null=True
-    )
-    category_detail = CategorySerializer(source='category', read_only=True)
-    genre_detail = GenreSerializer(source='genre', many=True, read_only=True)
-
-    class Meta:
-        model = Title
-        fields = (
-            'id', 'name', 'description', 'year', 'category', 'genre',
-            'rating', 'category_detail', 'genre_detail'
-        )
-
-    def to_representation(self, instance):
-        """Переопределяет вывод категории и жанра в сериализаторе."""
-        rep = super().to_representation(instance)
-        category_detail = rep.pop('category_detail')
-        rep['category'] = category_detail
-        genre_detail = rep.pop('genre_detail')
-        rep['genre'] = genre_detail
-        if rep['rating'] is not None:
-            rep['rating'] = int(round(rep['rating']))
-        return rep
-
-    def validate_year(self, value):
-        """Проверяет, что год выпуска не больше текущего."""
-        year = dt.date.today().year
-        if value > year:
-            raise ValidationError('Год выпуска не может быть больше текущего.')
-        return value
 
     def validate_genre(self, value):
         if not value:
-            raise serializers.ValidationError(
-                'Список жанров не может быть пустым.'
-            )
+            raise serializers.ValidationError('Список жанров не может быть пустым.')
         return value
+
+    def to_representation(self, instance):
+        """Возвращает данные сериализатора для чтения."""
+        return TitleSerializerRead(instance).data
+
+    class Meta:
+        model = Title
+        fields = ('name', 'year', 'category', 'genre')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
