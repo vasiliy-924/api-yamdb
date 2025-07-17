@@ -4,19 +4,21 @@ from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework import serializers
 
+from users.constants import FORBIDDEN_USERNAME
+
 USERNAME_REGEX = r'^[\w.@+-]+\Z'
 
 
 def validate_username_value(value):
-    """Проверяет корректность username по шаблону и запрещает 'me'."""
-    if not re.match(USERNAME_REGEX, value):
+    """Проверяет корректность username по шаблону и запрещает me."""
+    forbidden = re.sub(r'[\w.@+-]', '', value)
+    if forbidden:
         raise serializers.ValidationError(
-            'Имя пользователя может содержать только буквы, '
-            'цифры и символы: @/./+/-/_'
+            f'Имя пользователя содержит запрещённые символы: {set(forbidden)}'
         )
-    if value.lower() == 'me':
+    if value.lower() == FORBIDDEN_USERNAME:
         raise serializers.ValidationError(
-            'Username "me" запрещён.'
+            f'Username {FORBIDDEN_USERNAME} запрещён.'
         )
     return value
 
