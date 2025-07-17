@@ -1,54 +1,55 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from datetime import date
+
+from .constants import NAME_MAX_LENGHT, SLUG_MAX_LENGHT
 
 
-class Category(models.Model):
-    """Модель категории произведения."""
+class BaseModel(models.Model):
+    """Абстрактная модель для категорий и жанров."""
 
-    name = models.CharField(max_length=256, verbose_name='Категории')
+    name = models.CharField(max_length=NAME_MAX_LENGHT, verbose_name='Название')
     slug = models.SlugField(
         unique=True,
-        max_length=50,
-        verbose_name='Идентификатор категории',
+        max_length=SLUG_MAX_LENGHT,
+        verbose_name='Идентификатор',
     )
-    description = models.TextField(verbose_name='Описание категории')
+    description = models.TextField(verbose_name='Описание')
 
-    class Meta():
+    class Meta:
+        abstract = True
+        ordering = ['name']
+
+    def __str__(self):
+        """Строковое представление объекта."""
+        return self.name[:20]
+
+
+class Category(BaseModel):
+    """Модель категории произведения."""
+
+    class Meta(BaseModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
-    def __str__(self):
-        """Строковое представление категории."""
-        return self.name[:20]
 
-
-class Genre(models.Model):
+class Genre(BaseModel):
     """Модель жанра произведения."""
 
-    name = models.CharField(max_length=256, verbose_name='Жанры')
-    slug = models.SlugField(
-        unique=True,
-        max_length=50,
-        verbose_name='Идентификатор жанра',
-    )
-    description = models.TextField(verbose_name='Описание жанра')
-
-    class Meta():
+    class Meta(BaseModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-
-    def __str__(self):
-        """Строковое представление жанра."""
-        return self.name[:20]
 
 
 class Title(models.Model):
     """Модель произведения."""
 
-    name = models.CharField(max_length=256, verbose_name='Название')
+    name = models.CharField(max_length=NAME_MAX_LENGHT, verbose_name='Название')
     description = models.TextField(verbose_name='Описание')
-    year = models.IntegerField(
+    year = models.SmallIntegerField(
         verbose_name='Дата выхода',
         help_text='Укажите дату выхода',
+        db_index=True
     )
     category = models.ForeignKey(
         Category,
@@ -59,7 +60,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='TitleGenre',
         related_name='titles',
         verbose_name='Жанр'
     )
@@ -71,22 +71,8 @@ class Title(models.Model):
     def __str__(self):
         """Строковое представление произведения."""
         return self.name[:20]
-
-
-class TitleGenre(models.Model):
-    """Промежуточная модель для связи произведения и жанра."""
-
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.SET_NULL,
-        null=True,
-        verbose_name='Произведение')
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.SET_NULL,
-        null=True,
-        verbose_name='Жанр')
-
-    def __str__(self):
-        """Строковое представление связи произведения и жанра."""
-        return f'{self.title}{self.genre}'
+    
+    def clean(self):
+        if self.year > date.today().year:
+            raise ValidationError('Год выпуска не может быть больше текущего года.')
+ 
