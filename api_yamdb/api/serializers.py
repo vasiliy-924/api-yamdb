@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from django.core.validators import EmailValidator
+from django.utils.crypto import get_random_string
+from users.services import send_confirmation_email
 
 from content.models import Category, Genre, Title
 from reviews.models import Comment, Review
@@ -41,40 +43,69 @@ class TokenObtainSerializer(serializers.Serializer):
         data['user'] = user
         return data
 
+    def create(self, validated_data):
+        # Не создаёт объект, просто возвращает данные
+        return validated_data
 
-class SignupSerializer(serializers.Serializer, UsernameValidationMixin):
+
+class SignupSerializer(serializers.Serializer):
     """Сериализатор для регистрации пользователя."""
 
-    email = serializers.EmailField(
-        required=True,
-        max_length=EMAIL_MAX_LENGTH,
-        validators=[EmailValidator(message='Введите корректный email.')]
-    )
+    email = serializers.EmailField(max_length=254, required=True)
     username = serializers.CharField(
-        max_length=STR_MAX_LENGTH,
+        max_length=150,
         required=True,
         validators=[validate_username_value]
     )
 
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError('Использовать имя "me" запрещено.')
+        email = self.initial_data.get('email')
+        user = User.objects.filter(username=value).first()
+        if user and email and user.email != email:
+            raise serializers.ValidationError('Username уже занят.')
+        return value
+
+    def validate_email(self, value):
+        username = self.initial_data.get('username')
+        user = User.objects.filter(email=value).first()
+        if user and username and user.username != username:
+            raise serializers.ValidationError('Email уже занят.')
+        return value
+
     def validate(self, data):
-        """Проверяет уникальность username и email."""
         username = data.get('username')
         email = data.get('email')
-        if User.objects.filter(username=username, email=email).exists():
-            return data
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({
-                'email': [
-                    'Email уже занят.'
-                ]
-            })
-        if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError({
-                'username': [
-                    'Username уже занят.'
-                ]
-            })
+        user_by_username = User.objects.filter(username=username).first()
+        user_by_email = User.objects.filter(email=email).first()
+        if user_by_username and user_by_email and user_by_username != user_by_email:
+            raise serializers.ValidationError(
+                'Email и username принадлежат разным пользователям.'
+            )
         return data
+
+    def create(self, validated_data):
+        username = validated_data['username']
+        email = validated_data['email']
+        confirmation_code = get_random_string(24)
+        user, created = User.objects.get_or_create(username=username, defaults={'email': email})
+        if not created:
+            if user.email != email:
+                raise serializers.ValidationError({'email': 'Email не совпадает с username.'})
+            user.confirmation_code = confirmation_code
+            user.save()
+        else:
+            user.confirmation_code = confirmation_code
+            user.save()
+        send_confirmation_email(user.email, confirmation_code)
+        return user
+
+    def to_representation(self, instance):
+        return {
+            'email': instance.email,
+            'username': instance.username,
+        }
 
 
 class AdminUserSerializer(serializers.ModelSerializer):

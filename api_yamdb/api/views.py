@@ -28,6 +28,10 @@ from reviews.models import Review
 from users.models import User
 from users.services import send_confirmation_email
 
+from django.utils.crypto import get_random_string
+from users.models import User
+from users.services import send_confirmation_email
+
 
 class TokenObtainView(generics.CreateAPIView):
     """Вью для получения JWT-токена по username и confirmation_code."""
@@ -36,11 +40,12 @@ class TokenObtainView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        """Обрабатывает POST-запрос для получения токена."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = serializer.validated_data['user']
+        from rest_framework_simplejwt.tokens import AccessToken
+        token = str(AccessToken.for_user(user))
+        return Response({'token': token}, status=status.HTTP_200_OK)
 
 
 class SignupView(generics.CreateAPIView):
@@ -50,11 +55,22 @@ class SignupView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        """Обрабатывает POST-запрос для регистрации пользователя."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+
+        confirmation_code = get_random_string(length=24)
+        user, created = User.objects.get_or_create(username=username, defaults={'email': email})
+        if not created:
+            if user.email != email:
+                return Response({'email': ['Email уже занят.']}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            user.email = email
+        user.confirmation_code = confirmation_code
+        user.save()
+        send_confirmation_email(user.email, confirmation_code)
+        return Response({'username': username, 'email': email}, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):
