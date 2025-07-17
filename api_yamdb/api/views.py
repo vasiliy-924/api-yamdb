@@ -12,7 +12,8 @@ from api.permissions import IsAuthorOrReadOnly, IsAdmin, IsAdminOrReadOnly
 from api.serializers import (
     CategorySerializer,
     GenreSerializer,
-    TitleSerializer,
+    TitleSerializerRead,
+    TitleSerializerWrite,
     TokenObtainSerializer,
     SignupSerializer,
     AdminUserSerializer,
@@ -137,11 +138,15 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
 
     queryset = Title.objects.annotate(rating=Avg('reviews__score')).order_by('-rating')
-    serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ('get', 'post', 'patch', 'delete')
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleSerializerRead
+        return TitleSerializerWrite
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
