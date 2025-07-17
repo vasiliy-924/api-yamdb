@@ -1,6 +1,5 @@
 from django.contrib import admin
-from content.models import Category, Genre, Title, TitleGenre
-
+from content.models import Category, Genre, Title
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -23,9 +22,3 @@ class TitleAdmin(admin.ModelAdmin):
     @admin.display(description='Жанры')
     def genres_list(self, obj):
         return ', '.join([genre.name for genre in obj.genre.all()])
-
-
-@admin.register(TitleGenre)
-class TitleGenreAdmin(admin.ModelAdmin):
-    list_display = ('title', 'genre')
-    search_fields = ('title__name', 'genre__name')
