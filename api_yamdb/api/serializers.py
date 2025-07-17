@@ -8,6 +8,7 @@ from content.models import Category, Genre, Title
 from reviews.models import Comment, Review
 from users.models import User
 from users.utils import validate_username_value
+from reviews.constants import MIN_SCORE, MAX_SCORE
 
 
 class TokenObtainSerializer(serializers.Serializer):
@@ -230,7 +231,14 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True,
         default=serializers.CurrentUserDefault()
     )
-    score = serializers.IntegerField(min_value=1, max_value=10)
+    score = serializers.IntegerField(
+        min_value=MIN_SCORE,
+        max_value=MAX_SCORE,
+        error_messages={
+            'min_value': f'Оценка должна быть не менее {MIN_SCORE}.',
+            'max_value': f'Оценка должна быть не более {MAX_SCORE}.'
+        }
+    )
 
     class Meta:
         model = Review
@@ -238,22 +246,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'author', 'pub_date')
 
     def validate(self, data):
-        """
-        Проверяет, что пользователь может оставить только один
-        отзыв на произведение.
-        """
+        """Проверяет уникальность отзыва."""
         request = self.context.get('request')
-        view = self.context.get('view')
-        title = view.get_title() if view else None
-        author = request.user if request else None
-        if self.instance is None and title and author:
-            if Review._default_manager.filter(
-                title=title,
-                author=author
-            ).exists():
-                raise serializers.ValidationError(
-                    'Вы уже оставили отзыв на это произведение'
-                )
+        if request.method != 'POST':
+            return data
+        title_id = self.context.get('view').kwargs.get('title_id')
+        author = request.user
+        if Review.objects.filter(title_id=title_id, author=author).exists():
+            raise serializers.ValidationError(
+                'Вы уже оставили отзыв на это произведение.'
+            )
         return data
 
 
