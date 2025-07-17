@@ -71,8 +71,8 @@ class Title(models.Model):
     def __str__(self):
         """Строковое представление произведения."""
         return self.name[:20]
-    
+
     def clean(self):
         if self.year > date.today().year:
             raise ValidationError('Год выпуска не может быть больше текущего года.')
- 
+
