@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -18,7 +18,8 @@ from api.serializers import (
     TitleSerializer,
     TokenObtainSerializer,
     SignupSerializer,
-    UserCreateSerializer,
+    AdminUserSerializer,
+    NotAdminUserSerializer,
     CommentSerializer,
     ReviewSerializer
 )
@@ -32,90 +33,52 @@ class TokenObtainView(generics.CreateAPIView):
     """Вью для получения JWT-токена по username и confirmation_code."""
 
     serializer_class = TokenObtainSerializer
-    permission_classes = ()
-    authentication_classes = ()
+    permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
         """Обрабатывает POST-запрос для получения токена."""
         serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except DRFValidationError as exc:
-            errors = exc.detail
-            if (
-                isinstance(errors, dict)
-                and 'username' in errors
-                and 'Пользователь не найден.' in errors['username']
-            ):
-                return Response(errors, status=status.HTTP_404_NOT_FOUND)
-            raise
-        user = serializer.validated_data['user']
-        token = str(AccessToken.for_user(user))
-        return Response({'token': token}, status=status.HTTP_200_OK)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SignupView(generics.CreateAPIView):
     """Вью для регистрации пользователя и отправки confirmation_code."""
 
     serializer_class = SignupSerializer
-    permission_classes = ()
-    authentication_classes = ()
+    permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
         """Обрабатывает POST-запрос для регистрации пользователя."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
-        username = serializer.validated_data['username']
-        confirmation_code = get_random_string(24)
-        try:
-            user = User.objects.get(username=username)
-            if user.email != email:
-                return Response(
-                    {'email': 'Email не совпадает с username.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            user.confirmation_code = confirmation_code
-            user.save()
-        except User.DoesNotExist:
-            user = User.objects.create(
-                username=username,
-                email=email,
-                confirmation_code=confirmation_code
-            )
-        send_confirmation_email(user.email, confirmation_code)
-        return Response(
-            {
-                'email': user.email,
-                'username': user.username,
-            },
-            status=status.HTTP_200_OK
-        )
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """Вьюсет для управления пользователями."""
 
     queryset = User.objects.all()
-    serializer_class = UserCreateSerializer
+    serializer_class = AdminUserSerializer
     permission_classes = (IsAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
     http_method_names = ('get', 'post', 'patch', 'delete')
 
-    @action(detail=False, methods=('get', 'patch'),
-            permission_classes=(IsAuthenticated,))
+    @action(detail=False, methods=['get', 'patch'], permission_classes=(IsAuthenticated,))
     def me(self, request):
         """Возвращает или обновляет данные текущего пользователя."""
         user = request.user
         if request.method == 'GET':
-            serializer = self.get_serializer(user)
+            serializer = NotAdminUserSerializer(user)
             return Response(serializer.data)
         elif request.method == 'PATCH':
             data = request.data.copy()
             data.pop('role', None)
-            serializer = self.get_serializer(
+            serializer = NotAdminUserSerializer(
                 user,
                 data=data,
                 partial=True
