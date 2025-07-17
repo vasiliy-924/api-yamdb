@@ -39,13 +39,22 @@ class Command(BaseCommand):
                     for row in reader:
                         fields = {}
                         for field_name, value in row.items():
-                            if model in RELATED_FIELDS and field_name in RELATED_FIELDS[model]:
+                            if (
+                                model in RELATED_FIELDS
+                                and field_name in RELATED_FIELDS[model]
+                            ):
                                 rel_model = RELATED_FIELDS[model][field_name]
-                                fields[field_name] = rel_model.objects.get(id=value) if value else None
+                                fields[field_name] = (
+                                    rel_model.objects.get(id=value)
+                                    if value else None
+                                )
                             else:
                                 fields[field_name] = value
                         instances.append(model(**fields))
-                model.objects.bulk_create(instances, ignore_conflicts=True)
+                model.objects.bulk_create(
+                    instances,
+                    ignore_conflicts=True
+                )
 
             # обработка связей "title-genre"
             genre_title_path = os.path.join(csv_dir, 'genre_title.csv')
@@ -56,6 +65,8 @@ class Command(BaseCommand):
                     genre = Genre.objects.get(id=row['genre_id'])
                     title.genre.add(genre)
 
-            self.stdout.write(self.style.SUCCESS('Импорт данных завершён успешно!'))
+            self.stdout.write(
+                self.style.SUCCESS('Импорт данных завершён успешно!')
+            )
         except Exception as e:
             raise CommandError(f'Ошибка при импорте: {e}')

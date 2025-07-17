@@ -4,10 +4,8 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
 
 from api.filters import TitleFilter
 from api.mixin import ModelMixinSet
@@ -61,16 +59,23 @@ class SignupView(generics.CreateAPIView):
         email = serializer.validated_data['email']
 
         confirmation_code = get_random_string(length=24)
-        user, created = User.objects.get_or_create(username=username, defaults={'email': email})
+        user, created = User.objects.get_or_create(
+            username=username, defaults={'email': email})
         if not created:
             if user.email != email:
-                return Response({'email': ['Email уже занят.']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'email': ['Email уже занят.']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             user.email = email
         user.confirmation_code = confirmation_code
         user.save()
         send_confirmation_email(user.email, confirmation_code)
-        return Response({'username': username, 'email': email}, status=status.HTTP_200_OK)
+        return Response(
+            {'username': username, 'email': email},
+            status=status.HTTP_200_OK
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -84,7 +89,8 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     http_method_names = ('get', 'post', 'patch', 'delete')
 
-    @action(detail=False, methods=['get', 'patch'], permission_classes=(IsAuthenticated,))
+    @action(detail=False, methods=['get', 'patch'],
+            permission_classes=(IsAuthenticated,))
     def me(self, request):
         """Возвращает или обновляет данные текущего пользователя."""
         user = request.user

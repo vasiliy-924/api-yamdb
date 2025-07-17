@@ -3,17 +3,19 @@ import datetime as dt
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
-from django.core.validators import EmailValidator
 from django.utils.crypto import get_random_string
 from users.services import send_confirmation_email
 
 from content.models import Category, Genre, Title
 from reviews.models import Comment, Review
 from users.models import User
-from users.mixins import UsernameValidationMixin
 from users.services import validate_username_value
 
-from users.constants import EMAIL_MAX_LENGTH, STR_MAX_LENGTH
+from users.constants import (
+    EMAIL_MAX_LENGTH,
+    STR_MAX_LENGTH,
+    FORBIDDEN_USERNAME
+)
 
 
 class TokenObtainSerializer(serializers.Serializer):
@@ -51,16 +53,17 @@ class TokenObtainSerializer(serializers.Serializer):
 class SignupSerializer(serializers.Serializer):
     """Сериализатор для регистрации пользователя."""
 
-    email = serializers.EmailField(max_length=254, required=True)
+    email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH, required=True)
     username = serializers.CharField(
-        max_length=150,
+        max_length=STR_MAX_LENGTH,
         required=True,
         validators=[validate_username_value]
     )
 
     def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError('Использовать имя "me" запрещено.')
+        if value == FORBIDDEN_USERNAME:
+            raise serializers.ValidationError(
+                f'Использовать имя "{FORBIDDEN_USERNAME}" запрещено.')
         email = self.initial_data.get('email')
         user = User.objects.filter(username=value).first()
         if user and email and user.email != email:
@@ -79,7 +82,10 @@ class SignupSerializer(serializers.Serializer):
         email = data.get('email')
         user_by_username = User.objects.filter(username=username).first()
         user_by_email = User.objects.filter(email=email).first()
-        if user_by_username and user_by_email and user_by_username != user_by_email:
+        if (
+            user_by_username and user_by_email
+            and user_by_username != user_by_email
+        ):
             raise serializers.ValidationError(
                 'Email и username принадлежат разным пользователям.'
             )
@@ -89,10 +95,12 @@ class SignupSerializer(serializers.Serializer):
         username = validated_data['username']
         email = validated_data['email']
         confirmation_code = get_random_string(24)
-        user, created = User.objects.get_or_create(username=username, defaults={'email': email})
+        user, created = User.objects.get_or_create(
+            username=username, defaults={'email': email})
         if not created:
             if user.email != email:
-                raise serializers.ValidationError({'email': 'Email не совпадает с username.'})
+                raise serializers.ValidationError(
+                    {'email': 'Email не совпадает с username.'})
             user.confirmation_code = confirmation_code
             user.save()
         else:

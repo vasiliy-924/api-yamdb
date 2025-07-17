@@ -7,7 +7,7 @@ from users.models import User
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     """Админка для модели User с расширенными возможностями."""
-    
+
     list_display = (
         'username',
         'email',
