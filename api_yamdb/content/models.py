@@ -2,7 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import date
 
-from .constants import NAME_MAX_LENGHT, SLUG_MAX_LENGHT
+from .constants import LINE_MAX_LENGHT, NAME_MAX_LENGHT, SLUG_MAX_LENGHT
 
 
 class BaseModel(models.Model):
@@ -22,7 +22,7 @@ class BaseModel(models.Model):
 
     def __str__(self):
         """Строковое представление объекта."""
-        return self.name[:20]
+        return self.name[:LINE_MAX_LENGHT]
 
 
 class Category(BaseModel):
@@ -70,7 +70,7 @@ class Title(models.Model):
 
     def __str__(self):
         """Строковое представление произведения."""
-        return self.name[:20]
+        return self.name[:LINE_MAX_LENGHT]
       
     def clean(self):
         if self.year > date.today().year:

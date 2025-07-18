@@ -17,8 +17,8 @@ class GenreAdmin(admin.ModelAdmin):
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
     list_display = ('name', 'year', 'category')
-    search_fields = ('name', 'year')
-    list_filter = ('year', 'category')
+    search_fields = ('name', 'year', 'category__name', 'genre__name')
+    list_filter = ('year', 'category', 'genre')
 
     @admin.display(description='Жанры')
     def genres_list(self, obj):
