@@ -158,6 +158,7 @@ class TitleSerializerRead(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'year', 'description', 'rating', 'category', 'genre'
         )
+
  
 
 class TitleSerializerWrite(serializers.ModelSerializer):
@@ -176,11 +177,10 @@ class TitleSerializerWrite(serializers.ModelSerializer):
     )
     description = serializers.CharField(required=True)
 
+
     def validate_genre(self, value):
         if not value:
-            raise serializers.ValidationError(
-                'Список жанров не может быть пустым.'
-            )
+            raise serializers.ValidationError('Список жанров не может быть пустым.')
         return value
 
     def to_representation(self, instance):

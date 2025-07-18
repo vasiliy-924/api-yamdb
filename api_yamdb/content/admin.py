@@ -23,5 +23,3 @@ class TitleAdmin(admin.ModelAdmin):
     @admin.display(description='Жанры')
     def genres_list(self, obj):
         return ', '.join([genre.name for genre in obj.genre.all()])
-
-

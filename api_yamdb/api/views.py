@@ -119,10 +119,6 @@ class BaseViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     http_method_names = ('get', 'post', 'delete')
 
-    def retrieve(self, request, *args, **kwargs):
-        from rest_framework.exceptions import MethodNotAllowed
-        raise MethodNotAllowed('GET')
-
 
 class CategoryViewSet(BaseViewSet):
     """Вьюсет для категорий произведений."""
@@ -148,9 +144,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
-            return TitleSerializerRead
-        return TitleSerializerWrite
+        if self.request.method in ['POST', 'PATCH','DELETE']:
+            return TitleSerializerWrite
+        return TitleSerializerRead
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
