@@ -31,19 +31,19 @@ from users.models import User
 from users.services import send_confirmation_email
 
 
+from rest_framework_simplejwt.tokens import AccessToken
+
+
 class TokenObtainView(generics.CreateAPIView):
     """Вью для получения JWT-токена по username и confirmation_code."""
 
     serializer_class = TokenObtainSerializer
     permission_classes = (AllowAny,)
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        from rest_framework_simplejwt.tokens import AccessToken
-        token = str(AccessToken.for_user(user))
-        return Response({'token': token}, status=status.HTTP_200_OK)
+        return Response(serializer.save(), status=status.HTTP_200_OK)
 
 
 class SignupView(generics.CreateAPIView):
@@ -55,27 +55,8 @@ class SignupView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
-
-        confirmation_code = get_random_string(length=24)
-        user, created = User.objects.get_or_create(
-            username=username, defaults={'email': email})
-        if not created:
-            if user.email != email:
-                return Response(
-                    {'email': ['Email уже занят.']},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        else:
-            user.email = email
-        user.confirmation_code = confirmation_code
-        user.save()
-        send_confirmation_email(user.email, confirmation_code)
-        return Response(
-            {'username': username, 'email': email},
-            status=status.HTTP_200_OK
-        )
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -89,25 +70,43 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     http_method_names = ('get', 'post', 'patch', 'delete')
 
-    @action(detail=False, methods=['get', 'patch'],
-            permission_classes=(IsAuthenticated,))
+    @action(
+        detail=False,
+        methods=('get',),
+        permission_classes=(IsAuthenticated,)
+    )
     def me(self, request):
-        """Возвращает или обновляет данные текущего пользователя."""
-        user = request.user
-        if request.method == 'GET':
-            serializer = NotAdminUserSerializer(user)
-            return Response(serializer.data)
-        elif request.method == 'PATCH':
-            data = request.data.copy()
-            data.pop('role', None)
-            serializer = NotAdminUserSerializer(
-                user,
-                data=data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
+        """Возвращает данные текущего пользователя."""
+        serializer = NotAdminUserSerializer(request.user)
+        return Response(serializer.data)
+    
+    @me.mapping.patch
+    def patch_me(self, request):
+        """Обновляет данные текущего пользователя."""
+        serializer = NotAdminUserSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+        # user = request.user
+        # if request.method == 'GET':
+        #     serializer = NotAdminUserSerializer(user)
+        #     return Response(serializer.data)
+        # elif request.method == 'PATCH':
+        #     data = request.data.copy()
+        #     data.pop('role', None)
+        #     serializer = NotAdminUserSerializer(
+        #         user,
+        #         data=data,
+        #         partial=True
+        #     )
+        #     serializer.is_valid(raise_exception=True)
+        #     serializer.save()
+        #     return Response(serializer.data)
 
 
 class BaseViewSet(viewsets.ModelViewSet):
@@ -137,14 +136,15 @@ class GenreViewSet(BaseViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для произведений."""
 
-    queryset = Title.objects.annotate(rating=Avg('reviews__score')).order_by('-rating')
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).order_by('-rating')
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH','DELETE']:
+        if self.request.method in ['POST', 'PATCH', 'DELETE']:
             return TitleSerializerWrite
         return TitleSerializerRead
 
