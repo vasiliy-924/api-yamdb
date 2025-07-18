@@ -14,6 +14,8 @@ from users.constants import (
     STR_MAX_LENGTH
 )
 
+from content.constants import NAME_MAX_LENGHT
+
 
 class TokenObtainSerializer(serializers.Serializer):
     """Сериализатор для получения токена по username и confirmation_code."""
@@ -121,7 +123,6 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ('name', 'slug')
-        lookup_field = 'slug'
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -130,26 +131,32 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = ('name', 'slug')
-        lookup_field = 'slug'
 
 
 class TitleSerializerRead(serializers.ModelSerializer):
     """Сериализатор для чтения произведений."""
 
-    rating = serializers.IntegerField(read_only=True, allow_null=True)
+    rating = serializers.IntegerField(
+        default=None,
+        read_only=True
+    )
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'description', 'rating', 'category', 'genre'
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
+
 
 
 class TitleSerializerWrite(serializers.ModelSerializer):
     """Сериализатор для записи произведений."""
 
+    name = serializers.CharField(required=True, max_length=NAME_MAX_LENGHT)
+    year = serializers.IntegerField(required=True)
+    description = serializers.CharField(required=False, allow_blank=True)
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
@@ -161,12 +168,17 @@ class TitleSerializerWrite(serializers.ModelSerializer):
         many=True,
         required=True
     )
-    description = serializers.CharField(required=True)
 
     def validate_genre(self, value):
         if not value:
             raise serializers.ValidationError(
                 'Список жанров не может быть пустым.')
+        return value
+
+    def validate_year(self, value):
+        from datetime import date
+        if value > date.today().year:
+            raise serializers.ValidationError('Год выпуска не может быть больше текущего года.')
         return value
 
     def to_representation(self, instance):
@@ -175,7 +187,7 @@ class TitleSerializerWrite(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('name', 'year', 'description', 'category', 'genre')
+        fields = ('id', 'name', 'description', 'year',  'category', 'genre')
 
 
 class ReviewSerializer(serializers.ModelSerializer):

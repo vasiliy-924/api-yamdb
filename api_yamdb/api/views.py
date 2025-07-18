@@ -2,10 +2,11 @@ from django.db.models import Avg
 from django.utils.crypto import get_random_string
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, status, viewsets
+from rest_framework import filters, generics, status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+
 
 from api.filters import TitleFilter
 from api.permissions import IsAuthorOrReadOnly, IsAdmin, IsAdminOrReadOnly
@@ -85,9 +86,13 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class BaseViewSet(viewsets.ModelViewSet):
-    """Базовый вьюсет для категорий и жанров."""
-
+class BaseViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    """Базовый вьюсет для категорий и жанров без detail-GET."""
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -120,9 +125,10 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH', 'DELETE']:
-            return TitleSerializerWrite
-        return TitleSerializerRead
+        if self.action in ('list', 'retrieve'):
+            return TitleSerializerRead
+        return TitleSerializerWrite
+
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
