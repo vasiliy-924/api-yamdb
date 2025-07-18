@@ -24,14 +24,6 @@ from api.serializers import (
 from content.models import Category, Genre, Title
 from reviews.models import Review
 from users.models import User
-from users.services import send_confirmation_email
-
-from django.utils.crypto import get_random_string
-from users.models import User
-from users.services import send_confirmation_email
-
-
-from rest_framework_simplejwt.tokens import AccessToken
 
 
 class TokenObtainView(generics.CreateAPIView):
@@ -79,7 +71,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Возвращает данные текущего пользователя."""
         serializer = NotAdminUserSerializer(request.user)
         return Response(serializer.data)
-    
+
     @me.mapping.patch
     def patch_me(self, request):
         """Обновляет данные текущего пользователя."""
@@ -91,22 +83,6 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-
-        # user = request.user
-        # if request.method == 'GET':
-        #     serializer = NotAdminUserSerializer(user)
-        #     return Response(serializer.data)
-        # elif request.method == 'PATCH':
-        #     data = request.data.copy()
-        #     data.pop('role', None)
-        #     serializer = NotAdminUserSerializer(
-        #         user,
-        #         data=data,
-        #         partial=True
-        #     )
-        #     serializer.is_valid(raise_exception=True)
-        #     serializer.save()
-        #     return Response(serializer.data)
 
 
 class BaseViewSet(viewsets.ModelViewSet):

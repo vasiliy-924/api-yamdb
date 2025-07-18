@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
-from django.utils.crypto import get_random_string
 from users.services import send_confirmation_email
 from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth.tokens import default_token_generator
@@ -12,8 +11,7 @@ from users.services import validate_username_value
 
 from users.constants import (
     EMAIL_MAX_LENGTH,
-    STR_MAX_LENGTH,
-    FORBIDDEN_USERNAME
+    STR_MAX_LENGTH
 )
 
 
@@ -70,18 +68,18 @@ class SignupSerializer(serializers.Serializer):
         user_by_username = User.objects.filter(username=username).first()
         user_by_email = User.objects.filter(email=email).first()
 
-        if user_by_username and user_by_email and user_by_username != user_by_email:
-            raise serializers.ValidationError(
-                'Email и username принадлежат разным пользователям.'
-            )
+        errors = {}
+
         if user_by_username and user_by_username.email != email:
-            raise serializers.ValidationError(
-                {'username': 'Этот username уже занят другим email.'}
-            )
+            errors['username'] = [
+                'Этот username уже занят другим email.'
+            ]
         if user_by_email and user_by_email.username != username:
-            raise serializers.ValidationError(
-                {'email': 'Этот email уже занят другим username.'}
-            )
+            errors['email'] = [
+                'Этот email уже занят другим username.'
+            ]
+        if errors:
+            raise serializers.ValidationError(errors)
         return data
 
     def create(self, validated_data):
