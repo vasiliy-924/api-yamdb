@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
 from django.db import models
+
+from users.constants import STR_MAX_LENGTH, EMAIL_MAX_LENGTH
+from users.services import validate_username_value
 
 
 class User(AbstractUser):
@@ -16,35 +17,27 @@ class User(AbstractUser):
 
     username = models.CharField(
         verbose_name='никнейм',
-        max_length=150,
+        max_length=STR_MAX_LENGTH,
         unique=True,
         help_text=(
-            'Обязательно. Не более 150 символов. '
-            'Только буквы, цифры и @/./+/-/_. '
+            f'Обязательно. Не более {STR_MAX_LENGTH} символов. '
+            f'Только буквы, цифры и @/./+/-/_. '
         ),
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message=(
-                    'Имя пользователя может содержать только буквы, '
-                    'цифры и символы: @/./+/-/_'
-                )
-            )
-        ]
+        validators=[validate_username_value]
     )
     email = models.EmailField(
         verbose_name='email адрес',
-        max_length=254,
+        max_length=EMAIL_MAX_LENGTH,
         unique=True,
     )
     first_name = models.CharField(
         verbose_name='имя',
-        max_length=150,
+        max_length=STR_MAX_LENGTH,
         blank=True,
     )
     last_name = models.CharField(
         verbose_name='фамилия',
-        max_length=150,
+        max_length=STR_MAX_LENGTH,
         blank=True,
     )
     bio = models.TextField(
@@ -53,7 +46,7 @@ class User(AbstractUser):
     )
     role = models.CharField(
         verbose_name='роль',
-        max_length=20,
+        max_length=max(len(role) for role, _ in Roles.choices),
         choices=Roles.choices,
         default=Roles.USER,
     )
@@ -69,15 +62,6 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
-    def save(self, *args, **kwargs):
-        if str(self.username).lower() == 'me':
-            raise ValidationError({
-                'username': (
-                    'Имя пользователя "me" запрещено.'
-                )
-            })
-        super().save(*args, **kwargs)
-
     @property
     def is_admin(self):
         """Проверяет, является ли пользователь администратором."""
@@ -90,4 +74,4 @@ class User(AbstractUser):
 
     def __str__(self):
         """Строковое представление пользователя."""
-        return self.username[:20]
+        return str(self.username)[:20]

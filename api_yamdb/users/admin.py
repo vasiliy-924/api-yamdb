@@ -6,15 +6,14 @@ from users.models import User
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    """
-    Админка для модели User с расширенными возможностями
-    отображения и управления.
-    """
+    """Админка для модели User с расширенными возможностями."""
+
     list_display = (
         'username',
         'email',
         'first_name',
         'last_name',
+        'role',
         'is_staff',
         'comments_count',
         'reviews_count'
@@ -37,6 +36,7 @@ class UserAdmin(BaseUserAdmin):
         'last_name',
         'bio'
     )
+    list_editable = ('role',)
     readonly_fields = (
         'last_login',
         'date_joined',
