@@ -119,6 +119,10 @@ class BaseViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     http_method_names = ('get', 'post', 'delete')
 
+    def retrieve(self, request, *args, **kwargs):
+        from rest_framework.exceptions import MethodNotAllowed
+        raise MethodNotAllowed('GET')
+
 
 class CategoryViewSet(BaseViewSet):
     """Вьюсет для категорий произведений."""

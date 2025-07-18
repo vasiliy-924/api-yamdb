@@ -1,6 +1,3 @@
-import datetime as dt
-
-from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
@@ -158,7 +155,9 @@ class TitleSerializerRead(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'rating', 'category', 'genre')
+        fields = (
+            'id', 'name', 'year', 'description', 'rating', 'category', 'genre'
+        )
  
 
 class TitleSerializerWrite(serializers.ModelSerializer):
@@ -175,10 +174,13 @@ class TitleSerializerWrite(serializers.ModelSerializer):
         many=True,
         required=True
     )
+    description = serializers.CharField(required=True)
 
     def validate_genre(self, value):
         if not value:
-            raise serializers.ValidationError('Список жанров не может быть пустым.')
+            raise serializers.ValidationError(
+                'Список жанров не может быть пустым.'
+            )
         return value
 
     def to_representation(self, instance):
@@ -187,7 +189,7 @@ class TitleSerializerWrite(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('name', 'year', 'category', 'genre')
+        fields = ('name', 'year', 'description', 'category', 'genre')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
