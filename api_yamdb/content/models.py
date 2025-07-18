@@ -1,17 +1,19 @@
-from django.db import models
-from django.core.exceptions import ValidationError
 from datetime import date
 
-from .constants import NAME_MAX_LENGHT, SLUG_MAX_LENGHT
+from django.core.exceptions import ValidationError
+from django.db import models
+
+from api_yamdb.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 
 
 class BaseModel(models.Model):
     """Абстрактная модель для категорий и жанров."""
 
-    name = models.CharField(max_length=NAME_MAX_LENGHT, verbose_name='Название')
+    name = models.CharField(max_length=NAME_MAX_LENGTH,
+                            verbose_name='Название')
     slug = models.SlugField(
         unique=True,
-        max_length=SLUG_MAX_LENGHT,
+        max_length=SLUG_MAX_LENGTH,
         verbose_name='Идентификатор',
     )
     description = models.TextField(verbose_name='Описание')
@@ -44,7 +46,8 @@ class Genre(BaseModel):
 class Title(models.Model):
     """Модель произведения."""
 
-    name = models.CharField(max_length=NAME_MAX_LENGHT, verbose_name='Название')
+    name = models.CharField(max_length=NAME_MAX_LENGTH,
+                            verbose_name='Название')
     description = models.TextField(verbose_name='Описание')
     year = models.SmallIntegerField(
         verbose_name='Дата выхода',
@@ -71,7 +74,8 @@ class Title(models.Model):
     def __str__(self):
         """Строковое представление произведения."""
         return self.name[:20]
-      
+
     def clean(self):
         if self.year > date.today().year:
-            raise ValidationError('Год выпуска не может быть больше текущего года.')
+            raise ValidationError(
+                'Год выпуска не может быть больше текущего года.')

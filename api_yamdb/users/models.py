@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from users.constants import STR_MAX_LENGTH, EMAIL_MAX_LENGTH
+from api_yamdb.constants import EMAIL_MAX_LENGTH, STR_MAX_LENGTH
 from users.services import validate_username_value
 
 

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from reviews.constants import MIN_SCORE, MAX_SCORE, MAX_TEXT_LENGTH
+from api_yamdb.constants import MAX_SCORE, MAX_TEXT_LENGTH, MIN_SCORE
 from content.models import Title  # noqa: F401
 
 

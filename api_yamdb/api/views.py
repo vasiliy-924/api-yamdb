@@ -1,26 +1,24 @@
 from django.db.models import Avg
-from django.utils.crypto import get_random_string
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, status, viewsets, mixins
+from rest_framework import filters, generics, mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-
 from api.filters import TitleFilter
-from api.permissions import IsAuthorOrReadOnly, IsAdmin, IsAdminOrReadOnly
+from api.permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorOrReadOnly
 from api.serializers import (
+    AdminUserSerializer,
     CategorySerializer,
+    CommentSerializer,
     GenreSerializer,
+    NotAdminUserSerializer,
+    ReviewSerializer,
+    SignupSerializer,
     TitleSerializerRead,
     TitleSerializerWrite,
     TokenObtainSerializer,
-    SignupSerializer,
-    AdminUserSerializer,
-    NotAdminUserSerializer,
-    CommentSerializer,
-    ReviewSerializer
 )
 from content.models import Category, Genre, Title
 from reviews.models import Review
@@ -128,7 +126,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return TitleSerializerRead
         return TitleSerializerWrite
-
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

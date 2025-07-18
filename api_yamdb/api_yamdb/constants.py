@@ -1,0 +1,15 @@
+# Общие константы проекта
+
+# content
+NAME_MAX_LENGTH = 256
+SLUG_MAX_LENGTH = 50
+
+# reviews
+MIN_SCORE = 1
+MAX_SCORE = 10
+MAX_TEXT_LENGTH = 10000
+
+# users
+STR_MAX_LENGTH = 150
+EMAIL_MAX_LENGTH = 254
+FORBIDDEN_USERNAME = 'me'

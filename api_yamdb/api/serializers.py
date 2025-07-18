@@ -1,23 +1,21 @@
-from rest_framework import serializers
-from django.shortcuts import get_object_or_404
-from users.services import send_confirmation_email
-from rest_framework_simplejwt.tokens import AccessToken
-from django.contrib.auth.tokens import default_token_generator
+from datetime import date
 
+from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
+from rest_framework import serializers
+from rest_framework_simplejwt.tokens import AccessToken
+
+from api_yamdb.constants import (
+    EMAIL_MAX_LENGTH,
+    MIN_SCORE,
+    MAX_SCORE,
+    NAME_MAX_LENGTH,
+    STR_MAX_LENGTH
+)
 from content.models import Category, Genre, Title
 from reviews.models import Comment, Review
 from users.models import User
-
-
-from users.services import validate_username_value
-from reviews.constants import MIN_SCORE, MAX_SCORE
-
-from users.constants import (
-    EMAIL_MAX_LENGTH,
-    STR_MAX_LENGTH
-)
-
-from content.constants import NAME_MAX_LENGHT
+from users.services import send_confirmation_email, validate_username_value
 
 
 class TokenObtainSerializer(serializers.Serializer):
@@ -153,11 +151,10 @@ class TitleSerializerRead(serializers.ModelSerializer):
         )
 
 
-
 class TitleSerializerWrite(serializers.ModelSerializer):
     """Сериализатор для записи произведений."""
 
-    name = serializers.CharField(required=True, max_length=NAME_MAX_LENGHT)
+    name = serializers.CharField(required=True, max_length=NAME_MAX_LENGTH)
     year = serializers.IntegerField(required=True)
     description = serializers.CharField(required=False, allow_blank=True)
     category = serializers.SlugRelatedField(
@@ -179,9 +176,9 @@ class TitleSerializerWrite(serializers.ModelSerializer):
         return value
 
     def validate_year(self, value):
-        from datetime import date
         if value > date.today().year:
-            raise serializers.ValidationError('Год выпуска не может быть больше текущего года.')
+            raise serializers.ValidationError(
+                'Год выпуска не может быть больше текущего года.')
         return value
 
     def to_representation(self, instance):
@@ -190,7 +187,7 @@ class TitleSerializerWrite(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'description', 'year',  'category', 'genre')
+        fields = ('id', 'name', 'description', 'year', 'category', 'genre')
 
 
 class ReviewSerializer(serializers.ModelSerializer):

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework import serializers
 
-from users.constants import FORBIDDEN_USERNAME
+from api_yamdb.constants import FORBIDDEN_USERNAME
 
 USERNAME_REGEX = r'^[\w.@+-]+\Z'
 
