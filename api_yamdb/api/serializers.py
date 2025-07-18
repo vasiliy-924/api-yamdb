@@ -45,7 +45,7 @@ class TokenObtainSerializer(serializers.Serializer):
         data['user'] = user
         return data
 
-    def create(sefl, validated_data):
+    def create(self, validated_data):
         """Получает JWT-токен для пользователя."""
         user = get_object_or_404(User, username=validated_data['username'])
         return {'token': str(AccessToken.for_user(user))}

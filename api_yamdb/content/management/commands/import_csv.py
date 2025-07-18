@@ -13,7 +13,7 @@ class Command(BaseCommand):
     help = 'Импортирует данные из csv-файлов в static/data/ в базу данных'
 
     def handle(self, *args, **options):
-        MODEL_FILE_MAP = {
+        model_file_map = {
             User: 'users.csv',
             Category: 'category.csv',
             Genre: 'genre.csv',
@@ -22,7 +22,7 @@ class Command(BaseCommand):
             Comment: 'comments.csv',
         }
 
-        RELATED_FIELDS = {
+        related_fields = {
             Review: {'author': User, 'title': Title},
             Comment: {'author': User, 'review': Review},
             Title: {'category': Category},
@@ -31,7 +31,7 @@ class Command(BaseCommand):
         csv_dir = os.path.join(settings.BASE_DIR, 'static', 'data')
 
         try:
-            for model, filename in MODEL_FILE_MAP.items():
+            for model, filename in model_file_map.items():
                 file_path = os.path.join(csv_dir, filename)
                 instances = []
                 with open(file_path, encoding='utf-8') as csvfile:
@@ -40,10 +40,10 @@ class Command(BaseCommand):
                         fields = {}
                         for field_name, value in row.items():
                             if (
-                                model in RELATED_FIELDS
-                                and field_name in RELATED_FIELDS[model]
+                                model in related_fields
+                                and field_name in related_fields[model]
                             ):
-                                rel_model = RELATED_FIELDS[model][field_name]
+                                rel_model = related_fields[model][field_name]
                                 fields[field_name] = (
                                     rel_model.objects.get(id=value)
                                     if value else None
