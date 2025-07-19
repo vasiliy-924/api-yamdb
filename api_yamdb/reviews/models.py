@@ -6,7 +6,7 @@ from api_yamdb.constants import MAX_SCORE, MAX_TEXT_LENGTH, MIN_SCORE
 from content.models import Title  # noqa: F401
 
 
-class BaseContentModel(models.Model):
+class TextAuthorDateModel(models.Model):
     """Абстрактная модель для отзывов и комментариев."""
 
     text = models.TextField(verbose_name='Текст', max_length=MAX_TEXT_LENGTH)
@@ -22,7 +22,7 @@ class BaseContentModel(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         default_related_name = '%(class)ss'
 
     def __str__(self):
@@ -30,7 +30,7 @@ class BaseContentModel(models.Model):
         return f'{self.__class__.__name__} {self.id} от {self.author}'
 
 
-class Review(BaseContentModel):
+class Review(TextAuthorDateModel):
     """Модель отзыва на произведение."""
 
     title = models.ForeignKey(
@@ -38,7 +38,7 @@ class Review(BaseContentModel):
         on_delete=models.CASCADE,
         verbose_name='Произведение',
     )
-    score = models.SmallIntegerField(
+    score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=(
             MinValueValidator(
@@ -52,7 +52,7 @@ class Review(BaseContentModel):
         )
     )
 
-    class Meta(BaseContentModel.Meta):
+    class Meta(TextAuthorDateModel.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -63,7 +63,7 @@ class Review(BaseContentModel):
         ]
 
 
-class Comment(BaseContentModel):
+class Comment(TextAuthorDateModel):
     """Модель комментария к отзыву."""
 
     review = models.ForeignKey(
@@ -72,6 +72,6 @@ class Comment(BaseContentModel):
         verbose_name='Отзыв',
     )
 
-    class Meta(BaseContentModel.Meta):
+    class Meta(TextAuthorDateModel.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'

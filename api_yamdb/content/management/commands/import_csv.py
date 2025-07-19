@@ -8,9 +8,14 @@ from content.models import Category, Genre, Title
 from reviews.models import Comment, Review
 from users.models import User
 
+TitleGenre = Title.genre.through
+
 
 class Command(BaseCommand):
-    help = 'Импортирует данные из csv-файлов в static/data/ в базу данных'
+    help = (
+        'Импортирует данные из csv-файлов в static/data/ в базу данных, '
+        'включая m2m Title-Genre'
+    )
 
     def handle(self, *args, **options):
         model_file_map = {
@@ -20,6 +25,7 @@ class Command(BaseCommand):
             Title: 'titles.csv',
             Review: 'review.csv',
             Comment: 'comments.csv',
+            TitleGenre: 'genre_title.csv',
         }
 
         related_fields = {
@@ -38,6 +44,13 @@ class Command(BaseCommand):
                     reader = csv.DictReader(csvfile)
                     for row in reader:
                         fields = {}
+                        if model is TitleGenre:
+                            title = Title.objects.get(id=row['title_id'])
+                            genre = Genre.objects.get(id=row['genre_id'])
+                            instances.append(
+                                TitleGenre(title=title, genre=genre)
+                            )
+                            continue
                         for field_name, value in row.items():
                             if (
                                 model in related_fields
@@ -51,22 +64,9 @@ class Command(BaseCommand):
                             else:
                                 fields[field_name] = value
                         instances.append(model(**fields))
-                model.objects.bulk_create(
-                    instances,
-                    ignore_conflicts=True
-                )
+                model.objects.bulk_create(instances, ignore_conflicts=True)
 
-            # обработка связей "title-genre"
-            genre_title_path = os.path.join(csv_dir, 'genre_title.csv')
-            with open(genre_title_path, encoding='utf-8') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    title = Title.objects.get(id=row['title_id'])
-                    genre = Genre.objects.get(id=row['genre_id'])
-                    title.genre.add(genre)
-
-            self.stdout.write(
-                self.style.SUCCESS('Импорт данных завершён успешно!')
-            )
+            self.stdout.write(self.style.SUCCESS(
+                'Импорт данных завершён успешно!'))
         except Exception as e:
             raise CommandError(f'Ошибка при импорте: {e}')
