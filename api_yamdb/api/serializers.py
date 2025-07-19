@@ -15,7 +15,8 @@ from api_yamdb.constants import (
 from content.models import Category, Genre, Title
 from reviews.models import Comment, Review
 from users.models import User
-from users.services import send_confirmation_email, validate_username_value
+from users.services import send_confirmation_email
+from users.validators import validate_username_value
 
 
 class TokenObtainSerializer(serializers.Serializer):

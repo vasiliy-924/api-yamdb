@@ -1,4 +1,4 @@
-from users.services import validate_username_value
+from users.validators import validate_username_value
 
 
 class UsernameValidationMixin:

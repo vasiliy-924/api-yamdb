@@ -1,8 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from api_yamdb.constants import EMAIL_MAX_LENGTH, STR_MAX_LENGTH
-from users.services import validate_username_value
+from api_yamdb.constants import (
+    EMAIL_MAX_LENGTH,
+    STR_MAX_LENGTH,
+    CONF_CODE_MAX_LENGTH
+)
+from users.validators import validate_username_value
 
 
 class User(AbstractUser):
@@ -23,7 +27,7 @@ class User(AbstractUser):
             f'Обязательно. Не более {STR_MAX_LENGTH} символов. '
             f'Только буквы, цифры и @/./+/-/_. '
         ),
-        validators=[validate_username_value]
+        validators=(validate_username_value,)
     )
     email = models.EmailField(
         verbose_name='email адрес',
@@ -52,7 +56,7 @@ class User(AbstractUser):
     )
     confirmation_code = models.CharField(
         verbose_name='Код подтверждения',
-        max_length=128,
+        max_length=CONF_CODE_MAX_LENGTH,
         blank=True,
         null=True
     )
