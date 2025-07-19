@@ -1,13 +1,15 @@
-from datetime import date
-
-from django.core.exceptions import ValidationError
 from django.db import models
 
-from api_yamdb.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
+from api_yamdb.constants import (
+    NAME_MAX_LENGTH,
+    SLUG_MAX_LENGTH,
+    STR_REPRES_MAX_LENGTH
+)
+from content.validators import validate_year
 
 
-class BaseModel(models.Model):
-    """Абстрактная модель для категорий и жанров."""
+class NameSlugModel(models.Model):
+    """Абстрактная модель с полями для категорий и жанров."""
 
     name = models.CharField(max_length=NAME_MAX_LENGTH,
                             verbose_name='Название')
@@ -16,29 +18,28 @@ class BaseModel(models.Model):
         max_length=SLUG_MAX_LENGTH,
         verbose_name='Идентификатор',
     )
-    description = models.TextField(verbose_name='Описание')
 
     class Meta:
         abstract = True
-        ordering = ['name']
+        ordering = ('name',)
 
     def __str__(self):
         """Строковое представление объекта."""
-        return self.name[:20]
+        return self.name[:STR_REPRES_MAX_LENGTH]
 
 
-class Category(BaseModel):
+class Category(NameSlugModel):
     """Модель категории произведения."""
 
-    class Meta(BaseModel.Meta):
+    class Meta(NameSlugModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
 
-class Genre(BaseModel):
+class Genre(NameSlugModel):
     """Модель жанра произведения."""
 
-    class Meta(BaseModel.Meta):
+    class Meta(NameSlugModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -52,7 +53,8 @@ class Title(models.Model):
     year = models.SmallIntegerField(
         verbose_name='Дата выхода',
         help_text='Укажите дату выхода',
-        db_index=True
+        db_index=True,
+        validators=(validate_year,)
     )
     category = models.ForeignKey(
         Category,
@@ -73,9 +75,4 @@ class Title(models.Model):
 
     def __str__(self):
         """Строковое представление произведения."""
-        return self.name[:20]
-
-    def clean(self):
-        if self.year > date.today().year:
-            raise ValidationError(
-                'Год выпуска не может быть больше текущего года.')
+        return self.name[:STR_REPRES_MAX_LENGTH]

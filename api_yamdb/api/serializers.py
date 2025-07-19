@@ -1,4 +1,4 @@
-from datetime import date
+
 
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
@@ -37,11 +37,9 @@ class TokenObtainSerializer(serializers.Serializer):
         if errors:
             raise serializers.ValidationError(errors)
         user = get_object_or_404(User, username=username)
-        if str(user.confirmation_code) != str(confirmation_code):
+        if not default_token_generator.check_token(user, confirmation_code):
             raise serializers.ValidationError({
-                'confirmation_code': [
-                    'Неверный confirmation_code.'
-                ]
+                'confirmation_code': ['Неверный confirmation_code.']
             })
         data['user'] = user
         return data
@@ -69,21 +67,20 @@ class SignupSerializer(serializers.Serializer):
         """Проверяем email и username на уникальность."""
         username = data.get('username')
         email = data.get('email')
-        user_by_username = User.objects.filter(username=username).first()
-        user_by_email = User.objects.filter(email=email).first()
 
-        errors = {}
+        if User.objects.filter(username=username, email=email).exists():
+            return data
 
-        if user_by_username and user_by_username.email != email:
-            errors['username'] = [
-                'Этот username уже занят другим email.'
-            ]
-        if user_by_email and user_by_email.username != username:
-            errors['email'] = [
-                'Этот email уже занят другим username.'
-            ]
-        if errors:
-            raise serializers.ValidationError(errors)
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({
+                'email': ['Этот email уже занят другим пользователем.']
+            })
+
+        if User.objects.filter(username=username).exists():
+            raise serializers.ValidationError({
+                'username': ['Этот username уже занят другим пользователем.']
+            })
+
         return data
 
     def create(self, validated_data):
@@ -95,9 +92,6 @@ class SignupSerializer(serializers.Serializer):
         )
 
         confirmation_code = default_token_generator.make_token(user)
-        user.confirmation_code = confirmation_code
-        user.save()
-
         send_confirmation_email(user.email, confirmation_code)
         return user
 
@@ -155,8 +149,6 @@ class TitleSerializerRead(serializers.ModelSerializer):
 class TitleSerializerWrite(serializers.ModelSerializer):
     """Сериализатор для записи произведений."""
 
-    name = serializers.CharField(required=True, max_length=NAME_MAX_LENGTH)
-    year = serializers.IntegerField(required=True)
     description = serializers.CharField(required=False, allow_blank=True)
     category = serializers.SlugRelatedField(
         slug_field='slug',
@@ -170,25 +162,19 @@ class TitleSerializerWrite(serializers.ModelSerializer):
         required=True
     )
 
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'description', 'year', 'category', 'genre')
+
     def validate_genre(self, value):
         if not value:
             raise serializers.ValidationError(
                 'Список жанров не может быть пустым.')
         return value
 
-    def validate_year(self, value):
-        if value > date.today().year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего года.')
-        return value
-
     def to_representation(self, instance):
         """Возвращает данные сериализатора для чтения."""
         return TitleSerializerRead(instance).data
-
-    class Meta:
-        model = Title
-        fields = ('id', 'name', 'description', 'year', 'category', 'genre')
 
 
 class ReviewSerializer(serializers.ModelSerializer):

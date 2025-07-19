@@ -1,4 +1,5 @@
 # Общие константы проекта
+STR_REPRES_MAX_LENGTH = 20
 
 # content
 NAME_MAX_LENGTH = 256
