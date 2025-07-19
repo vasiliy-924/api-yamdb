@@ -9,7 +9,6 @@ from api_yamdb.constants import (
     EMAIL_MAX_LENGTH,
     MIN_SCORE,
     MAX_SCORE,
-    NAME_MAX_LENGTH,
     STR_MAX_LENGTH
 )
 from content.models import Category, Genre, Title
@@ -64,22 +63,23 @@ class SignupSerializer(serializers.Serializer):
     )
 
     def validate(self, data):
-        """Проверяем email и username на уникальность."""
         username = data.get('username')
         email = data.get('email')
+
+        errors = {}
 
         if User.objects.filter(username=username, email=email).exists():
             return data
 
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({
-                'email': ['Этот email уже занят другим пользователем.']
-            })
+            errors['email'] = ['Этот email уже занят другим пользователем.']
 
         if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError({
-                'username': ['Этот username уже занят другим пользователем.']
-            })
+            errors['username'] = [
+                'Этот username уже занят другим пользователем.']
+
+        if errors:
+            raise serializers.ValidationError(errors)
 
         return data
 
@@ -93,6 +93,9 @@ class SignupSerializer(serializers.Serializer):
 
         confirmation_code = default_token_generator.make_token(user)
         send_confirmation_email(user.email, confirmation_code)
+        # Сохраняем в модели пользователя, иначе код в модели будет пуст.
+        user.confirmation_code = confirmation_code
+        user.save()
         return user
 
 

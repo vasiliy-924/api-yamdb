@@ -12,7 +12,10 @@ TitleGenre = Title.genre.through
 
 
 class Command(BaseCommand):
-    help = 'Импортирует данные из csv-файлов в static/data/ в базу данных, включая m2m Title-Genre'
+    help = (
+        'Импортирует данные из csv-файлов в static/data/ в базу данных, '
+        'включая m2m Title-Genre'
+    )
 
     def handle(self, *args, **options):
         model_file_map = {
@@ -44,14 +47,20 @@ class Command(BaseCommand):
                         if model is TitleGenre:
                             title = Title.objects.get(id=row['title_id'])
                             genre = Genre.objects.get(id=row['genre_id'])
-                            instances.append(TitleGenre(
-                                title=title, genre=genre))
+                            instances.append(
+                                TitleGenre(title=title, genre=genre)
+                            )
                             continue
                         for field_name, value in row.items():
-                            if model in related_fields and field_name in related_fields[model]:
+                            if (
+                                model in related_fields
+                                and field_name in related_fields[model]
+                            ):
                                 rel_model = related_fields[model][field_name]
-                                fields[field_name] = rel_model.objects.get(
-                                    id=value) if value else None
+                                fields[field_name] = (
+                                    rel_model.objects.get(id=value)
+                                    if value else None
+                                )
                             else:
                                 fields[field_name] = value
                         instances.append(model(**fields))
