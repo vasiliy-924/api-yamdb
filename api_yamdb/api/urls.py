@@ -1,5 +1,4 @@
 from django.urls import include, path
-
 from rest_framework.routers import DefaultRouter
 
 from api.views import (
@@ -31,10 +30,13 @@ api_v1_router.register(
 )
 
 
+auth_urlpatterns = [
+    path('signup/', SignupView.as_view(), name='signup'),
+    path('token/', TokenObtainView.as_view(), name='token_obtain'),
+]
+
 urlpatterns = [
-    path('v1/auth/signup/', SignupView.as_view(), name='signup'),
-    path('v1/auth/token/', TokenObtainView.as_view(), name='token_obtain'),
+    path('v1/auth/', include((auth_urlpatterns, 'auth'))),
     path('v1/', include(api_v1_router.urls)),
-    path('v1/', include('djoser.urls')),
     path('v1/', include('djoser.urls.jwt')),
 ]
