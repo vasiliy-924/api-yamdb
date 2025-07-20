@@ -42,7 +42,6 @@ class UserAdmin(BaseUserAdmin):
         'date_joined',
         'comments_count',
         'reviews_count',
-        'confirmation_code'
     )
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
@@ -55,7 +54,6 @@ class UserAdmin(BaseUserAdmin):
                 'bio',
                 'comments_count',
                 'reviews_count',
-                'confirmation_code'
             )
             }
         ),
