@@ -55,12 +55,12 @@ class Review(TextAuthorDateModel):
     class Meta(TextAuthorDateModel.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=('title', 'author'),
                 name='unique_review'
-            )
-        ]
+            ),
+        )
 
 
 class Comment(TextAuthorDateModel):
