@@ -1,5 +1,3 @@
-
-
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -67,17 +65,13 @@ class SignupSerializer(serializers.Serializer):
         email = data.get('email')
 
         errors = {}
-
         if User.objects.filter(username=username, email=email).exists():
             return data
-
         if User.objects.filter(email=email).exists():
             errors['email'] = ['Этот email уже занят другим пользователем.']
-
         if User.objects.filter(username=username).exists():
             errors['username'] = [
                 'Этот username уже занят другим пользователем.']
-
         if errors:
             raise serializers.ValidationError(errors)
 
@@ -93,9 +87,6 @@ class SignupSerializer(serializers.Serializer):
 
         confirmation_code = default_token_generator.make_token(user)
         send_confirmation_email(user.email, confirmation_code)
-        # Сохраняем в модели пользователя, иначе код в модели будет пуст.
-        user.confirmation_code = confirmation_code
-        user.save()
         return user
 
 
@@ -152,7 +143,6 @@ class TitleSerializerRead(serializers.ModelSerializer):
 class TitleSerializerWrite(serializers.ModelSerializer):
     """Сериализатор для записи произведений."""
 
-    description = serializers.CharField(required=False, allow_blank=True)
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),

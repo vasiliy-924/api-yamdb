@@ -3,8 +3,7 @@ from django.db import models
 
 from api_yamdb.constants import (
     EMAIL_MAX_LENGTH,
-    STR_MAX_LENGTH,
-    CONF_CODE_MAX_LENGTH
+    STR_MAX_LENGTH
 )
 from users.validators import validate_username_value
 
@@ -53,12 +52,6 @@ class User(AbstractUser):
         max_length=max(len(role) for role, _ in Roles.choices),
         choices=Roles.choices,
         default=Roles.USER,
-    )
-    confirmation_code = models.CharField(
-        verbose_name='Код подтверждения',
-        max_length=CONF_CODE_MAX_LENGTH,
-        blank=True,
-        null=True
     )
 
     class Meta:
